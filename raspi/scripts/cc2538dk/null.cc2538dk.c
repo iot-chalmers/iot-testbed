@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Swedish Institute of Computer Science.
+ * Copyright (c) 2015.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,15 +26,14 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * This file is part of the Contiki operating system.
  *
  */
 
 /**
  * \file
- *         A very simple Contiki application showing how Contiki programs look
+ *         Puts the openmote in the deepest power-saving mode forever
  * \author
- *         Adam Dunkels <adam@sics.se>
+ *         Beshr Al Nahas <beshr@chalmers.se>
  */
 
 #include "contiki.h"
