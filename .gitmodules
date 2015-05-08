@@ -1,0 +1,3 @@
+[submodule "raspi/scripts/cc2538dk/cc2538-bsl"]
+	path = raspi/scripts/cc2538dk/cc2538-bsl
+	url = https://github.com/beshrns/cc2538-bsl.git
