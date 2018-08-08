@@ -10,7 +10,7 @@ firmware_path=$1
 #erase
 /home/user/scripts/sky/skytools/msp430-bsl-linux --telosb -c $tty_path -e && sleep 2 ; 
 #program
-/home/user/scripts/sky/skytools/msp430-bsl-linux --telosb -c $tty_path -I -p $firmware_path && sleep 2 
+/home/user/scripts/sky/skytools/msp430-bsl-linux --telosb -c $tty_path -p $firmware_path && sleep 2 
 if [ $? -ne 0 ]; then
     exit 1
 fi
