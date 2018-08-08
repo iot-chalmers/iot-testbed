@@ -1,8 +1,8 @@
 #!/bin/bash
 # First reset the node so it enters programming mode
 sleep 1
-usb-hub-off.sh
-usb-hub-on.sh
+../usb-hub-off.sh
+../usb-hub-on.sh
 sleep 3
 # Now program the node
 firmware_path=$1
@@ -17,6 +17,6 @@ if [ $? -ne 0 ]; then
 fi
 sleep 1
 # Reboot the node
-usb-hub-off.sh
-usb-hub-on.sh
+../usb-hub-off.sh
+../usb-hub-on.sh
 sleep 1

@@ -24,8 +24,8 @@ $(BSL) -c $tty_path -r
 #sleep 1
 #sleep 1
 # Reboot the node
-usb-hub-off.sh
-usb-hub-on.sh
+../usb-hub-off.sh
+../usb-hub-on.sh
 #sleep 1
 
 
