@@ -8,6 +8,7 @@ sleep 1
 # Now program the node
 firmware_path=$1
 #get script from https://raw.githubusercontent.com/WayneKeenan/nrfjprog.sh/master/nrfjprog.sh
+pushd /home/user/scripts/nrf52/JLink_Linux_V632i_arm
 /home/user/scripts/nrf52/JLink_Linux_V632i_arm/nrfjprog.sh -f nrf52 --erase-all
 /home/user/scripts/nrf52/JLink_Linux_V632i_arm/nrfjprog.sh --flash $firmware_path -f nrf52
 if [ $? -ne 0 ]; then
