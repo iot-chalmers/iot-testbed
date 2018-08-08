@@ -6,9 +6,12 @@ import sys
 import os
 import subprocess
 
+TESTBED_PI_PATH = "/home/user/raspi/scripts"
+
 def pssh(hosts_path, cmd, message, inline=False):
   print "%s (on all: %s)" %(message, cmd)
-  return subprocess.call(["parallel-ssh", "-h", hosts_path, "-o", "pssh-out", "-e", "pssh-err", "-l", "user", "-i" if inline else "", cmd])
+  cmdpth = os.path.join(TESTBED_PI_PATH, cmd)
+  return subprocess.call(["parallel-ssh", "-h", hosts_path, "-o", "pssh-out", "-e", "pssh-err", "-l", "user", "-i" if inline else "", cmdpth])
   
 def pscp(hosts_path, src, dst, message):
   print "%s (on all: %s -> %s)" %(message, src, dst)
