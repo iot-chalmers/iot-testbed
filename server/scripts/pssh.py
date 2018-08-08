@@ -6,7 +6,7 @@ import sys
 import os
 import subprocess
 
-TESTBED_PI_PATH = "/home/user/raspi/scripts"
+TESTBED_PI_PATH = "/home/user/scripts"
 
 def pssh(hosts_path, cmd, message, inline=False):
   print "%s (on all: %s)" %(message, cmd)
