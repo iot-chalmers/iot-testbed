@@ -11,10 +11,10 @@ from pssh import *
 
 REMOTE_LOGS_PATH = "/home/user/logs"
 REMOTE_SCRIPTS_PATH = "/home/user/scripts"
-REMOTE_JN_SCRIPTS_PATH = os.path.join(REMOTE_SCRIPTS_PATH, "jn5168")
+REMOTE_Z1_SCRIPTS_PATH = os.path.join(REMOTE_SCRIPTS_PATH, "z1")
 REMOTE_TMP_PATH = "/home/user/tmp"
-REMOTE_FIRMWARE_PATH = os.path.join(REMOTE_TMP_PATH, "firmware.jn5168.bin")
-  
+REMOTE_FIRMWARE_PATH = os.path.join(REMOTE_TMP_PATH, "firmware.ihex")
+
 if __name__=="__main__":
   
   if len(sys.argv)<2:
@@ -25,26 +25,30 @@ if __name__=="__main__":
   job_dir = sys.argv[1]
 
   # Look for the firmware
-  firmware_path = None
+  elf_path = None
   if os.path.isdir(job_dir):
    for f in os.listdir(job_dir):
-    if f.endswith(".jn5168.bin"):
-      firmware_path = os.path.join(job_dir, f)
+    if f.endswith(".z1"):
+      elf_path = os.path.join(job_dir, f)
       break
        
-  if firmware_path == None:
-    print "No jn5168 firmware found!"
+  if elf_path == None:
+    print "No z1 firmware found!"
     sys.exit(2)
-      
+   
+  ihex_path = elf_path[0:elf_path.rfind(".")]+".ihex"
+  
+  print "Generating ihex from %s to %s"%(elf_path, ihex_path)
+  os.system("msp430-objcopy %s -O ihex %s" %(elf_path, ihex_path))
+        
   hosts_path = os.path.join(job_dir, "hosts")
   # Copy firmware to the nodes
-  if pscp(hosts_path, firmware_path, REMOTE_FIRMWARE_PATH, "Copying jn1568 firmware to the PI nodes") != 0:
+  if pscp(hosts_path, ihex_path, REMOTE_FIRMWARE_PATH, "Copying z1 firmware to the PI nodes") != 0:
     sys.exit(3)
   # Program the nodes
-  if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "install.sh"), REMOTE_FIRMWARE_PATH), "Installing jn5168 firmware") != 0:
+  if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_Z1_SCRIPTS_PATH, "install.sh"), REMOTE_FIRMWARE_PATH), "Installing z1 firmware") != 0:
     sys.exit(4)
   # Start serialdump
   remote_log_dir = os.path.join(REMOTE_LOGS_PATH, os.path.basename(job_dir), "log.txt")
-  if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "serialdump.sh"), remote_log_dir), "Starting serialdump") != 0:
+  if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_Z1_SCRIPTS_PATH, "serialdump.sh"), remote_log_dir), "Starting serialdump") != 0:
     sys.exit(5)
-
