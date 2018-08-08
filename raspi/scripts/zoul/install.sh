@@ -9,6 +9,6 @@ bsl_path=scripts/zoul/cc2538-bsl.py
 python $bsl_path -e -w -v -a $bsl_address -p $tty_path $bin_path
 sleep 1
 # Reboot the node
-../usb-hub-off.sh
-../usb-hub-on.sh
+/home/user/scripts/usb-hub-off.sh
+/home/user/scripts/usb-hub-on.sh
 sleep 2

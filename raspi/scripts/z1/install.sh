@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Reboot the node
-../usb-hub-off.sh
-../usb-hub-on.sh
+/home/user/scripts/usb-hub-off.sh
+/home/user/scripts/usb-hub-on.sh
 # Now program the node
 ihex_path=$1
 tty_path=`ls /dev/serial/by-id/*Zolertia_Z1*`

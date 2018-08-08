@@ -2,8 +2,8 @@
 
 # First reset the node so we get it mounted if it was not
 #sleep 1
-../usb-hub-off.sh
-../usb-hub-on.sh
+/home/user/scripts/usb-hub-off.sh
+/home/user/scripts/usb-hub-on.sh
 sleep 1
 # Now program the node
 firmware_path=$1
@@ -16,6 +16,6 @@ fi
 ./JLink_Linux_V632i_arm/nrfjprog.sh --reset -f nrf52
 sleep 1
 # Reboot the node
-../usb-hub-off.sh
-../usb-hub-on.sh
+/home/user/scripts/usb-hub-off.sh
+/home/user/scripts/usb-hub-on.sh
 sleep 1
