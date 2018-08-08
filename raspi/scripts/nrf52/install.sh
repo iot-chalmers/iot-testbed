@@ -8,12 +8,12 @@ sleep 1
 # Now program the node
 firmware_path=$1
 #get script from https://raw.githubusercontent.com/WayneKeenan/nrfjprog.sh/master/nrfjprog.sh
-./JLink_Linux_V632i_arm/nrfjprog.sh -f nrf52 --erase-all
-./JLink_Linux_V632i_arm/nrfjprog.sh --flash $firmware_path -f nrf52
+/home/user/scripts/nrf52/JLink_Linux_V632i_arm/nrfjprog.sh -f nrf52 --erase-all
+/home/user/scripts/nrf52/JLink_Linux_V632i_arm/nrfjprog.sh --flash $firmware_path -f nrf52
 if [ $? -ne 0 ]; then
     exit 1
 fi
-./JLink_Linux_V632i_arm/nrfjprog.sh --reset -f nrf52
+/home/user/scripts/nrf52/JLink_Linux_V632i_arm/nrfjprog.sh --reset -f nrf52
 sleep 1
 # Reboot the node
 /home/user/scripts/usb-hub-off.sh

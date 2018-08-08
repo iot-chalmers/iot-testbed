@@ -4,7 +4,7 @@ tty_path1=`ls /dev/serial/by-id/usb-FTDI_MTM-CM5000MSP_*`
 tty_path2=`ls /dev/serial/by-id/usb-Moteiv_tmote_sky_*`
 tty_path=$(tty_path1)$(tty_path2)
 firmware_path=$1
-BSL = ./skytools/msp430-bsl-linux --telosb
+BSL = /home/user/scripts/sky/skytools/msp430-bsl-linux --telosb
 BSL_FILETYPE = -I
 IHEXFILE = $firmware_path
 #reset
