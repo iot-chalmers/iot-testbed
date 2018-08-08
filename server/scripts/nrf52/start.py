@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 sys.path.append('/usr/testbed/scripts')
+sys.path.insert(0,'..')
 from pssh import *
 
 REMOTE_LOGS_PATH = "/home/user/logs"
