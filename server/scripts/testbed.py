@@ -15,7 +15,7 @@ import re
 import datetime
 import pytz
 import multiprocessing
-from pssh import *
+from psshlib import *
 
 curr_job = None
 curr_job_owner = None
