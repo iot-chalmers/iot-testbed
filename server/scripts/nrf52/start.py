@@ -6,15 +6,26 @@ import sys
 import os
 import subprocess
 #sys.path.append('/usr/testbed/scripts')
-sys.path.append('..')
-import psshlib
+#sys.path.append('..')
+#import psshlib
 
 REMOTE_LOGS_PATH = "/home/user/logs"
 REMOTE_SCRIPTS_PATH = "/home/user/scripts"
 REMOTE_JN_SCRIPTS_PATH = os.path.join(REMOTE_SCRIPTS_PATH, "nrf52")
 REMOTE_TMP_PATH = "/home/user/tmp"
 REMOTE_FIRMWARE_PATH = os.path.join(REMOTE_TMP_PATH, "firmware.nrf52.hex")
+
+TESTBED_PI_PATH = "/home/user/scripts"
+
+def pssh(hosts_path, cmd, message, inline=False):
+  print "%s (on all: %s)" %(message, cmd)
+  cmdpth = os.path.join(TESTBED_PI_PATH, cmd)
+  return subprocess.call(["parallel-ssh", "-h", hosts_path, "-o", "pssh-out", "-e", "pssh-err", "-l", "user", "-i" if inline else "", cmdpth])
   
+def pscp(hosts_path, src, dst, message):
+  print "%s (on all: %s -> %s)" %(message, src, dst)
+  return subprocess.call(["parallel-scp", "-h", hosts_path, "-o", "pssh-out", "-e", "pssh-err", "-l", "user", "-r", src, dst])
+
 if __name__=="__main__":
 
   if len(sys.argv)<2:
@@ -38,13 +49,13 @@ if __name__=="__main__":
       
   hosts_path = os.path.join(job_dir, "hosts")
   # Copy firmware to the nodes
-  if psshlib.pscp(hosts_path, firmware_path, REMOTE_FIRMWARE_PATH, "Copying nrf52 firmware to the PI nodes") != 0:
+  if pscp(hosts_path, firmware_path, REMOTE_FIRMWARE_PATH, "Copying nrf52 firmware to the PI nodes") != 0:
     sys.exit(3)
   # Program the nodes
-  if psshlib.pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "install.sh"), REMOTE_FIRMWARE_PATH), "Installing nrf52 firmware") != 0:
+  if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "install.sh"), REMOTE_FIRMWARE_PATH), "Installing nrf52 firmware") != 0:
     sys.exit(4)
   # Start serialdump
   remote_log_dir = os.path.join(REMOTE_LOGS_PATH, os.path.basename(job_dir), "log.txt")
-  if psshlib.pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "serialdump.sh"), remote_log_dir), "Starting serialdump") != 0:
+  if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "serialdump.sh"), remote_log_dir), "Starting serialdump") != 0:
     sys.exit(5)
 
