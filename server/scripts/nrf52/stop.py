@@ -8,7 +8,6 @@ import subprocess
 import sys
 sys.path.append('/usr/testbed/scripts')
 sys.path.append('..')
-import psshlib
 
 REMOTE_LOGS_PATH = "/home/user/logs"
 REMOTE_SCRIPTS_PATH = "/home/user/scripts"
@@ -17,7 +16,8 @@ REMOTE_TMP_PATH = "/home/user/tmp"
 REMOTE_NULL_FIRMWARE_PATH = os.path.join(REMOTE_JN_SCRIPTS_PATH, "null.nrf52.hex")
 
 if __name__=="__main__":
-  
+  import psshlib
+
   if len(sys.argv)<2:
     print "Job directory parameter not found!"
     sys.exit(1)
