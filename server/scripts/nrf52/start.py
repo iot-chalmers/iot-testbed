@@ -6,8 +6,8 @@ import sys
 import os
 import subprocess
 #sys.path.append('/usr/testbed/scripts')
-#sys.path.append('..')
-from .. import psshlib
+sys.path.append('..')
+import psshlib
 
 REMOTE_LOGS_PATH = "/home/user/logs"
 REMOTE_SCRIPTS_PATH = "/home/user/scripts"
