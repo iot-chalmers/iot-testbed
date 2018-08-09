@@ -5,10 +5,13 @@
 import sys
 import os
 import subprocess
-import sys
 sys.path.append('/usr/testbed/scripts')
-sys.path.insert(0,'..')
+sys.path.append('..')
 from pssh import *
+
+modulename = 'pssh'
+if modulename not in sys.modules:
+    print 'You have not imported the {} module'.format(modulename)
 
 REMOTE_LOGS_PATH = "/home/user/logs"
 REMOTE_SCRIPTS_PATH = "/home/user/scripts"
