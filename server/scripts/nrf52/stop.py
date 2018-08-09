@@ -8,7 +8,7 @@ import subprocess
 import sys
 sys.path.append('/usr/testbed/scripts')
 sys.path.append('..')
-from psshlib import *
+import psshlib
 
 REMOTE_LOGS_PATH = "/home/user/logs"
 REMOTE_SCRIPTS_PATH = "/home/user/scripts"
@@ -27,8 +27,8 @@ if __name__=="__main__":
        
   hosts_path = os.path.join(job_dir, "hosts")
   # Kill serialdump
-  pssh(hosts_path, "killall picocom -9", "Stopping picocom")
+  psshlib.pssh(hosts_path, "killall picocom -9", "Stopping picocom")
   # Program the nodes with null firmware
-  if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "install.sh"), REMOTE_NULL_FIRMWARE_PATH), "Uninstalling nrf52 firmware") != 0:
+  if psshlib.pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "install.sh"), REMOTE_NULL_FIRMWARE_PATH), "Uninstalling nrf52 firmware") != 0:
     sys.exit(4)
 

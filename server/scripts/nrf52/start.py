@@ -7,7 +7,7 @@ import os
 import subprocess
 sys.path.append('/usr/testbed/scripts')
 sys.path.append('..')
-from psshlib import *
+import psshlib
 
 REMOTE_LOGS_PATH = "/home/user/logs"
 REMOTE_SCRIPTS_PATH = "/home/user/scripts"
@@ -16,11 +16,6 @@ REMOTE_TMP_PATH = "/home/user/tmp"
 REMOTE_FIRMWARE_PATH = os.path.join(REMOTE_TMP_PATH, "firmware.nrf52.hex")
   
 if __name__=="__main__":
-  
-  modulename = 'pssh'
-  if modulename not in sys.modules or 'pscp' not in dir():
-    print 'You have not imported the {} module'.format(modulename)
-    sys.exit(1)
 
   if len(sys.argv)<2:
     print "Job directory parameter not found!"
@@ -43,13 +38,13 @@ if __name__=="__main__":
       
   hosts_path = os.path.join(job_dir, "hosts")
   # Copy firmware to the nodes
-  if pscp(hosts_path, firmware_path, REMOTE_FIRMWARE_PATH, "Copying nrf52 firmware to the PI nodes") != 0:
+  if psshlib.pscp(hosts_path, firmware_path, REMOTE_FIRMWARE_PATH, "Copying nrf52 firmware to the PI nodes") != 0:
     sys.exit(3)
   # Program the nodes
-  if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "install.sh"), REMOTE_FIRMWARE_PATH), "Installing nrf52 firmware") != 0:
+  if psshlib.pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "install.sh"), REMOTE_FIRMWARE_PATH), "Installing nrf52 firmware") != 0:
     sys.exit(4)
   # Start serialdump
   remote_log_dir = os.path.join(REMOTE_LOGS_PATH, os.path.basename(job_dir), "log.txt")
-  if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "serialdump.sh"), remote_log_dir), "Starting serialdump") != 0:
+  if psshlib.pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "serialdump.sh"), remote_log_dir), "Starting serialdump") != 0:
     sys.exit(5)
 
