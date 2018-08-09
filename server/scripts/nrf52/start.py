@@ -9,10 +9,6 @@ sys.path.append('/usr/testbed/scripts')
 sys.path.append('..')
 from pssh import *
 
-modulename = 'pssh'
-if modulename not in sys.modules:
-    print 'You have not imported the {} module'.format(modulename)
-
 REMOTE_LOGS_PATH = "/home/user/logs"
 REMOTE_SCRIPTS_PATH = "/home/user/scripts"
 REMOTE_JN_SCRIPTS_PATH = os.path.join(REMOTE_SCRIPTS_PATH, "nrf52")
@@ -21,6 +17,11 @@ REMOTE_FIRMWARE_PATH = os.path.join(REMOTE_TMP_PATH, "firmware.nrf52.hex")
   
 if __name__=="__main__":
   
+  modulename = 'pssh'
+  if modulename not in sys.modules or 'pscp' not in dir():
+    print 'You have not imported the {} module'.format(modulename)
+    sys.exit(1)
+
   if len(sys.argv)<2:
     print "Job directory parameter not found!"
     sys.exit(1)
