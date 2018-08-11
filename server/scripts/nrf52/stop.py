@@ -36,6 +36,7 @@ if __name__=="__main__":
   # Kill serialdump
   #pssh(hosts_path, "killall picocom -9", "Stopping picocom")
   pssh(hosts_path, "screen -S nrf52screen -X quit", "Stopping screen")
+  pssh(hosts_path, "screen -wipe", "Wiping screens")
 
   # Program the nodes with null firmware
   if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "install.sh"), REMOTE_NULL_FIRMWARE_PATH), "Uninstalling nrf52 firmware") != 0:
