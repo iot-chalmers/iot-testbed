@@ -356,7 +356,7 @@ def start(job_id):
   if duration != None:
     print "Scheduling end of job in %u min" %(duration)
 	# schedule in duration + 1 to account for the currently begun minute
-    py_testbed_script_path = os.path.join(TESTBED_SCRIPTS_PATH, platform, "testbed.py")
+    py_testbed_script_path = os.path.join(TESTBED_SCRIPTS_PATH, "testbed.py")
     os.system("echo '%s stop --force --start-next'  | at now + %u min" %(py_testbed_script_path, duration + 1))
   print history_message
 
