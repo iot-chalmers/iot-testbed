@@ -34,10 +34,12 @@ if __name__=="__main__":
        
   hosts_path = os.path.join(job_dir, "hosts")
   # Kill serialdump
-  #pssh(hosts_path, "killall picocom -9", "Stopping picocom")
-  #pssh(hosts_path, "screen -S nrf52screen -X quit", "Stopping screen")
-  #pssh(hosts_path, "screen -wipe", "Wiping screens")
-  pssh(hosts_path, "killall -9 cat; killall -9 contiki*", "Stopping serialdump")
+  pssh(hosts_path, "killall -9 picocom", "Stopping picocom")
+  pssh(hosts_path, "screen -S nrf52screen -X quit", "Stopping screen")
+  pssh(hosts_path, "screen -wipe", "Wiping screens")
+  pssh(hosts_path, "killall -9 screen", "Killing screen")
+
+  #pssh(hosts_path, "killall -9 cat; killall -9 contiki*", "Stopping serialdump")
 
   # Program the nodes with null firmware
   if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "install.sh"), REMOTE_NULL_FIRMWARE_PATH), "Uninstalling nrf52 firmware") != 0:
