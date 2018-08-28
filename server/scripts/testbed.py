@@ -390,8 +390,9 @@ def download():
   download_script_path = os.path.join(TESTBED_SCRIPTS_PATH, platform, "download.py")
   if os.path.exists(download_script_path) and subprocess.call([download_script_path, job_dir]) != 0:
     print "Platform download script %s failed!"%(download_script_path)
-    do_quit(1)
-  return
+    #do_quit(1)
+    return 1
+  return 0
 
 def stop(do_force):
   load_curr_job_variables(True, False)
