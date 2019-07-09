@@ -14,38 +14,42 @@ sudo apt install -y gcc-4.9-arm-linux-gnueabihf-base
 sudo apt-get install -y g++-arm-linux-gnueabihf
 sudo apt-get install -y build-essential
 
-pip install --upgrade pip
-pip install parallel-ssh
-pip install pytz --user
+sudo pip install --upgrade pip
+sudo pip install parallel-ssh
+sudo pip install pytz
 
-####download MAC addresses vendor database
-sudo wget http://standards.ieee.org/regauth/oui/oui.txt -O /usr/local/etc/oui.txt
+####Optional: download MAC addresses vendor database, so that the network logs of your Linux server recognize RaspberryPi MAC addresses vendor field
+sudo wget https://linuxnet.ca/ieee/oui.txt -O /usr/local/etc/oui.txt
 
 ####ping PIs
 for ip in raspi{03..05}; do ping -c 1 -t 1 $ip && echo "${ip} is up"; done
 
 ####add user to dialout group
-sudo usermod -aG dialout
+sudo usermod -aG dialout testbed
 
 ####create install folder for testbed SW
 sudo mkdir -p /usr/testbed
 sudo chown testbed:testbed /usr/testbed
 
 ########## RasPIs ##########
-####1. please make a user called user, and give it sudo access without password over ssh
-####2. these commands would install teh pkgs on the PIs
-parallel-ssh --hosts ~/testbed/sshhosts.txt --user user  --inline "sudo apt update && sudo apt -y --force-yes install picocom ssh python2.7 screen at ntpdate ntp"
-parallel-ssh --hosts ~/testbed/sshhosts.txt --user user  --inline "ntptime"
+####1. Preparation steps:
+##### a. Update the file: ~/testbed/sshhosts.txt and server/scripts/all-hosts with the PIs hostnames
+##### b. please make a user called 'user', and give it sudo access without password over ssh (add it to sudoers)
+##### c. ssh once to every PI, such that you have the key signature in your .ssh folder, and it does not complain later
 
-####install testbed SW to the server /usr and to PIs
+####2. these commands would install the required pkgs on the PIs
+parallel-ssh --hosts /home/testbed/iot-testbed/server/scripts/all-hosts --user user  --inline "sudo mkdir -p /usr/testbed && sudo chown user:user /usr/testbed && sudo usermod -aG dialout user && sudo apt update && sudo apt -y --force-yes install picocom ssh python2.7 screen at ntpdate ntp"
+
+####3. install testbed SW to the server /usr and to PIs
 sh /home/testbed/iot-testbed/install.sh
 
-####test if it works
+####4. test if testbed SW works and connects to the PIs listed under 
 python /usr/testbed/scripts/testbed.py status
 
-#####Update the files: ~/testbed/sshhosts.txt and server/scripts/all-hosts with the PIs hostnames
+####5. Optional, but recommended: check ntp time. SW will break when the PIs time is out of sync.
+parallel-ssh --hosts /home/testbed/iot-testbed/server/scripts/all-hosts --user user  --inline "ntptime"
 
-#### if this makes a problem, then disable apt autoupdate
+####6. if this makes a problem, then disable apt autoupdate. Steps:
 # systemctl stop apt-daily.service
 # systemctl disable apt-daily.service
 # systemctl kill --kill-who=all apt-daily.service
