@@ -7,6 +7,9 @@ import os
 import subprocess
 import string
 
+# extract node_id from file name (e.g. "pi16" -> 16)
+extract_pi_number = lambda x: int(filter(str.isdigit, x) or 0)
+
 def get_next_line(log_files):
   curr_earliest = None
   # look for earliest timestamp
@@ -68,10 +71,10 @@ if __name__=="__main__":
   print "Aggregating logs...",
   sys.stdout.flush()
   for f in os.listdir(logs_dir):
-    if os.path.isdir(os.path.join(logs_dir, f)) and f.startswith("pi"):
+    if os.path.isdir(os.path.join(logs_dir, f)):
       # extract node_id from file name (e.g. "pi16" -> 16)
-      node_id = int(f[2:])
-
+      node_id = extract_pi_number(f)
+      
       log_file_path = os.path.join(logs_dir, f, "log.txt")
       curr_log_file = open(log_file_path, 'r')
 	  
