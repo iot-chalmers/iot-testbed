@@ -45,16 +45,16 @@ sudo chown testbed:testbed /usr/testbed
 ##### c. ssh once to every PI, such that you have the key signature in your .ssh folder, and it does not complain later
 
 ####2. these commands would install the required pkgs on the PIs
-parallel-ssh --hosts /home/testbed/iot-testbed/server/scripts/all-hosts --user pi --inline "sudo mkdir -p /usr/testbed && sudo chown user:user /usr/testbed && sudo usermod -aG dialout user && sudo apt update && sudo apt -y --force-yes install picocom ssh python2.7 screen at ntpdate ntp"
+parallel-ssh --hosts /home/testbed/iot-testbed/server/scripts/all-hosts --user user --inline "sudo mkdir -p /usr/testbed && sudo chown user:user /usr/testbed && sudo usermod -aG dialout user && sudo apt update && sudo apt -y --force-yes install picocom ssh python2.7 screen at ntpdate ntp"
 
 ####3. install testbed SW to the server /usr and to PIs
 sh /home/testbed/iot-testbed/install.sh
 
 ####4. COPY JLINK rules file to allow flashing nrf52 for non-root users
-parallel-ssh --hosts /home/testbed/iot-testbed/server/scripts/all-hosts --user pi --inline "sudo cp /home/user/scripts/nrf52/JLink_Linux_V632i_arm/99-jlink.rules /etc/udev/rules.d"
+parallel-ssh --hosts /home/testbed/iot-testbed/server/scripts/all-hosts --user user --inline "sudo cp /home/user/scripts/nrf52/JLink_Linux_V632i_arm/99-jlink.rules /etc/udev/rules.d"
 
 ####5. IMPROTANT: login as root or sudo -i to each PI, and flash any file on the nrf52 board to update the JLink firmwarw
-parallel-ssh --hosts /home/testbed/iot-testbed/server/scripts/all-hosts --user pi --inline "sudo -i && cd /home/user/scripts/nrf52 && ./install.sh null.nrf52.hex"
+parallel-ssh --hosts /home/testbed/iot-testbed/server/scripts/all-hosts --user user --inline "sudo -i && cd /home/user/scripts/nrf52 && ./install.sh null.nrf52.hex"
 
 ####6. test if testbed SW works and connects to the PIs listed under 
 python /usr/testbed/scripts/testbed.py status
