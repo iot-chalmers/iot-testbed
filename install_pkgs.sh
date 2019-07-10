@@ -10,8 +10,10 @@
 ####install packages on server
 sudo apt update --fix-missing
 sudo apt install -y python-2.7 iptables-persistent dhcpdump rsync default-jre default-jdk pssh putty-tools clusterssh libffi screen at ntp tree
-sudo apt install -y gcc-4.9-arm-linux-gnueabihf-base
-sudo apt-get install -y g++-arm-linux-gnueabihf
+
+#sudo apt install -y gcc-4.9-arm-linux-gnueabihf-base #you might only find a newer version. install it for the time being
+#sudo apt-get install -y g++-arm-linux-gnueabihf
+sudo apt install -y gcc-arm-linux-gnueabihf #I use the version 4.9, but you might only find a newer version. Install it for the time being
 sudo apt-get install -y build-essential
 
 sudo pip install --upgrade pip
@@ -22,10 +24,15 @@ sudo pip install pytz
 sudo wget https://linuxnet.ca/ieee/oui.txt -O /usr/local/etc/oui.txt
 
 ####ping PIs
-for ip in raspi{03..05}; do ping -c 1 -t 1 $ip && echo "${ip} is up"; done
+for ip in $(cat /home/testbed/server/scripts/all-hosts); do ping -c 1 -t 1 $ip && echo "${ip} is up"; done
 
-####add user to dialout group
+####add user 'testbed' to dialout group
 sudo usermod -aG dialout testbed
+
+####add the users that need to use the testbedSW to the group testbed
+sudo usermod -aG testbed ban
+sudo usermod -aG testbed oha
+sudo usermod -aG testbed vpo
 
 ####create install folder for testbed SW
 sudo mkdir -p /usr/testbed
@@ -33,7 +40,7 @@ sudo chown testbed:testbed /usr/testbed
 
 ########## RasPIs ##########
 ####1. Preparation steps:
-##### a. Update the file: ~/testbed/sshhosts.txt and server/scripts/all-hosts with the PIs hostnames
+##### a. Update the file: server/scripts/all-hosts with the PIs hostnames
 ##### b. please make a user called 'user', and give it sudo access without password over ssh (add it to sudoers)
 ##### c. ssh once to every PI, such that you have the key signature in your .ssh folder, and it does not complain later
 
@@ -45,6 +52,13 @@ sh /home/testbed/iot-testbed/install.sh
 
 ####4. test if testbed SW works and connects to the PIs listed under 
 python /usr/testbed/scripts/testbed.py status
+
+####add PIs keys signatures -- execute on every user account on the server
+for ip in $(cat /usr/testbed/scripts/all-hosts); do 
+  if [ -z `ssh-keygen -F $ip` ]; then
+    ssh-keyscan -H $ip >> ~/.ssh/known_hosts
+  fi
+done
 
 ####5. Optional, but recommended: check ntp time. SW will break when the PIs time is out of sync.
 parallel-ssh --hosts /home/testbed/iot-testbed/server/scripts/all-hosts --user user  --inline "ntptime"
