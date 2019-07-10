@@ -44,9 +44,8 @@ sudo chown testbed:testbed /usr/testbed
 ##### b. please make a user called 'user', and give it sudo access without password over ssh (add it to sudoers)
 ##### c. ssh once to every PI, such that you have the key signature in your .ssh folder, and it does not complain later
 
-
 ####2. these commands would install the required pkgs on the PIs
-parallel-ssh --hosts /home/testbed/iot-testbed/server/scripts/all-hosts --user pi  --inline "sudo mkdir -p /usr/testbed && sudo chown user:user /usr/testbed && sudo usermod -aG dialout user && sudo apt update && sudo apt -y --force-yes install picocom ssh python2.7 screen at ntpdate ntp"
+parallel-ssh --hosts /home/testbed/iot-testbed/server/scripts/all-hosts --user pi --inline "sudo mkdir -p /usr/testbed && sudo chown user:user /usr/testbed && sudo usermod -aG dialout user && sudo apt update && sudo apt -y --force-yes install picocom ssh python2.7 screen at ntpdate ntp"
 
 ####3. install testbed SW to the server /usr and to PIs
 sh /home/testbed/iot-testbed/install.sh
@@ -54,21 +53,24 @@ sh /home/testbed/iot-testbed/install.sh
 ####4. COPY JLINK rules file to allow flashing nrf52 for non-root users
 parallel-ssh --hosts /home/testbed/iot-testbed/server/scripts/all-hosts --user pi --inline "sudo cp /home/user/scripts/nrf52/JLink_Linux_V632i_arm/99-jlink.rules /etc/udev/rules.d"
 
-####5. test if testbed SW works and connects to the PIs listed under 
+####5. IMPROTANT: login as root or sudo -i to each PI, and flash any file on the nrf52 board to update the JLink firmwarw
+parallel-ssh --hosts /home/testbed/iot-testbed/server/scripts/all-hosts --user pi --inline "sudo -i && cd /home/user/scripts/nrf52 && ./install.sh null.nrf52.hex"
+
+####6. test if testbed SW works and connects to the PIs listed under 
 python /usr/testbed/scripts/testbed.py status
 python /usr/testbed/scripts/testbed.py create --name 'null' --platform 'nrf52' --duration 2 --copy-from /usr/testbed/examples/nrf52-hello-world/hello-world.nrf52.hex --start
 
-####6. add PIs keys signatures -- execute on every user account on the server
+####7. add PIs keys signatures -- execute on every user account on the server
 for ip in $(cat /usr/testbed/scripts/all-hosts); do 
   if [ -z `ssh-keygen -F $ip` ]; then
     ssh-keyscan -H $ip >> ~/.ssh/known_hosts
   fi
 done
 
-####7. Optional, but recommended: check ntp time. SW will break when the PIs time is out of sync.
+####8. Optional, but recommended: check ntp time. SW will break when the PIs time is out of sync.
 parallel-ssh --hosts /home/testbed/iot-testbed/server/scripts/all-hosts --user user  --inline "ntptime"
 
-####8. test making a job from your laptop using your own account on the server: (replace the variables with usseful arguments)
+####9. test making a job from your laptop using your own account on the server: (replace the variables with usseful arguments)
 scp -P17122 $(FNAME).hex ban@sunlight.ds.informatik.uni-kiel.de:/home/ban/newjob.nrf52.hex
 ssh -p17122 ban@sunlight.ds.informatik.uni-kiel.de "python /usr/testbed/scripts/testbed.py create --name '${NAME}' --platform 'nrf52' --duration ${DURATION} --copy-from /home/ban/newjob.nrf52.hex --start"
 
