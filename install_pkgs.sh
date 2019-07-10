@@ -42,7 +42,7 @@ sudo chown testbed:testbed /usr/testbed
 ####1. Preparation steps:
 ##### a. Update the file: server/scripts/all-hosts with the PIs hostnames
 ##### b. please make a user called 'user', and give it sudo access without password over ssh (add it to sudoers)
-##### c. ssh once to every PI, such that you have the key signature in your .ssh folder, and it does not complain later
+##### (done automatically in step 7) c. ssh once to every PI, such that you have the key signature in your .ssh folder, and it does not complain later
 
 ####2. these commands would install the required pkgs on the PIs
 parallel-ssh --hosts /home/testbed/iot-testbed/server/scripts/all-hosts --user user --inline "sudo mkdir -p /usr/testbed && sudo chown user:user /usr/testbed && sudo usermod -aG dialout user && sudo apt update && sudo apt -y --force-yes install picocom ssh python2.7 screen at ntpdate ntp"
@@ -56,16 +56,18 @@ parallel-ssh --hosts /home/testbed/iot-testbed/server/scripts/all-hosts --user u
 ####5. IMPROTANT: login as root or sudo -i to each PI, and flash any file on the nrf52 board to update the JLink firmwarw
 parallel-ssh --hosts /home/testbed/iot-testbed/server/scripts/all-hosts --user user --inline "sudo -i && cd /home/user/scripts/nrf52 && ./install.sh null.nrf52.hex"
 
-####6. test if testbed SW works and connects to the PIs listed under 
-python /usr/testbed/scripts/testbed.py status
-python /usr/testbed/scripts/testbed.py create --name 'null' --platform 'nrf52' --duration 2 --copy-from /usr/testbed/examples/nrf52-hello-world/hello-world.nrf52.hex --start
-
-####7. add PIs keys signatures -- execute on every user account on the server
+####6. add PIs keys signatures -- execute on every user account on the server
 for ip in $(cat /usr/testbed/scripts/all-hosts); do 
   if [ -z `ssh-keygen -F $ip` ]; then
     ssh-keyscan -H $ip >> ~/.ssh/known_hosts
   fi
 done
+
+####7. test if testbed SW works and connects to the PIs listed under 
+python /usr/testbed/scripts/testbed.py status
+python /usr/testbed/scripts/testbed.py create --name 'null' --platform 'nrf52' --duration 2 --copy-from /usr/testbed/examples/nrf52-hello-world/hello-world.nrf52.hex --start
+
+
 
 ####8. Optional, but recommended: check ntp time. SW will break when the PIs time is out of sync.
 parallel-ssh --hosts /home/testbed/iot-testbed/server/scripts/all-hosts --user user  --inline "ntptime"
