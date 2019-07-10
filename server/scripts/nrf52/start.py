@@ -15,11 +15,9 @@ REMOTE_JN_SCRIPTS_PATH = os.path.join(REMOTE_SCRIPTS_PATH, "nrf52")
 REMOTE_TMP_PATH = "/home/user/tmp"
 REMOTE_FIRMWARE_PATH = os.path.join(REMOTE_TMP_PATH, "firmware.nrf52.hex")
 
-TESTBED_PI_PATH = "/home/user/scripts"
-
 def pssh(hosts_path, cmd, message, inline=False):
   print "%s (on all: %s)" %(message, cmd)
-  cmdpth = os.path.join(TESTBED_PI_PATH, cmd)
+  cmdpth = os.path.join(REMOTE_SCRIPTS_PATH, cmd)
   return subprocess.call(["parallel-ssh", "-h", hosts_path, "-o", "pssh-out", "-e", "pssh-err", "-l", "user", "-i" if inline else "", cmdpth])
   
 def pscp(hosts_path, src, dst, message):
