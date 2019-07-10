@@ -17,7 +17,7 @@ REMOTE_FIRMWARE_PATH = os.path.join(REMOTE_TMP_PATH, "firmware.sky.hex")
 
 def pssh(hosts_path, cmd, message, inline=False):
   print "%s (on all: %s)" %(message, cmd)
-  cmdpth = os.path.join(TESTBED_PI_PATH, cmd)
+  cmdpth = os.path.join(REMOTE_SCRIPTS_PATH, cmd)
   return subprocess.call(["parallel-ssh", "-h", hosts_path, "-o", "pssh-out", "-e", "pssh-err", "-l", "user", "-i" if inline else "", cmdpth])
   
 if __name__=="__main__":
