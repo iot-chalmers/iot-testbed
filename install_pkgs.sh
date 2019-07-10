@@ -71,10 +71,10 @@ done
 parallel-ssh --hosts /home/testbed/iot-testbed/server/scripts/all-hosts --user user  --inline "ntptime"
 
 ####9. test making a job from your laptop using your own account on the server: (replace the variables with usseful arguments)
-scp -P17122 $(FNAME).hex ban@sunlight.ds.informatik.uni-kiel.de:/home/ban/newjob.nrf52.hex
-ssh -p17122 ban@sunlight.ds.informatik.uni-kiel.de "python /usr/testbed/scripts/testbed.py create --name '${NAME}' --platform 'nrf52' --duration ${DURATION} --copy-from /home/ban/newjob.nrf52.hex --start"
+# scp -P17122 $(FNAME).hex ban@sunlight.ds.informatik.uni-kiel.de:/home/ban/newjob.nrf52.hex
+# ssh -p17122 ban@sunlight.ds.informatik.uni-kiel.de "python /usr/testbed/scripts/testbed.py create --name '${NAME}' --platform 'nrf52' --duration ${DURATION} --copy-from /home/ban/newjob.nrf52.hex --start"
 
-####9. if this makes a problem, then disable apt autoupdate. Steps:
+####10. if this makes a problem, then disable apt autoupdate. Steps:
 # systemctl stop apt-daily.service
 # systemctl disable apt-daily.service
 # systemctl kill --kill-who=all apt-daily.service
