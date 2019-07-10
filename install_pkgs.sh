@@ -14,7 +14,7 @@ sudo apt install -y python-2.7 iptables-persistent dhcpdump rsync default-jre de
 #sudo apt install -y gcc-4.9-arm-linux-gnueabihf-base #you might only find a newer version. install it for the time being
 #sudo apt-get install -y g++-arm-linux-gnueabihf
 sudo apt install -y gcc-arm-linux-gnueabihf #I use the version 4.9, but you might only find a newer version. Install it for the time being
-sudo apt-get install -y build-essential
+sudo apt-get install -y binutils-arm-none-eabi build-essential 
 
 sudo pip install --upgrade pip
 sudo pip install parallel-ssh
