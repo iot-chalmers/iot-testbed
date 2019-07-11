@@ -4,27 +4,26 @@ tty_path1=`ls /dev/serial/by-id/usb-FTDI_MTM-CM5000*`
 tty_path2=`ls /dev/serial/by-id/usb-Moteiv_tmote_sky_*`
 tty_path="$tty_path1$tty_path2"
 firmware_path=$1
-#BSL="/home/user/scripts/sky/skytools/msp430-bsl-linux --telosb"
-#reset
-/home/user/scripts/sky/skytools/msp430-bsl-linux --telosb -c $tty_path -r
-#erase
-/home/user/scripts/sky/skytools/msp430-bsl-linux --telosb -c $tty_path -e && sleep 2 ; 
-#program
-/home/user/scripts/sky/skytools/msp430-bsl-linux --telosb -c $tty_path -I -p $firmware_path && sleep 2 
+
+COUNTER=0
+while [  $COUNTER -lt 5 ]; do
+    echo Sky: Flashing trial $COUNTER
+    let COUNTER=COUNTER+1 
+
+    #reset
+    /home/user/scripts/sky/skytools/msp430-bsl-linux --telosb -c $tty_path -r
+    # erase and program
+    ~/scripts/sky/skytools/msp430-bsl-linux --telosb --speed=38400 --framesize=224 -c $tty_path -e --erasecycles=2 -p -I firmware_path && sleep 2
+    
+    if [ $? -e 0 ]; then
+        break
+    fi
+done
 if [ $? -ne 0 ]; then
     exit 1
 fi
 #reset
 /home/user/scripts/sky/skytools/msp430-bsl-linux --telosb -c $tty_path -r
 # Reboot the node
-#usb-hub-off.sh
-#usb-hub-on.sh
-#sleep 1
-#sleep 1
-# Reboot the node
 /home/user/scripts/usb-hub-off.sh
 /home/user/scripts/usb-hub-on.sh
-#sleep 1
-
-
-
