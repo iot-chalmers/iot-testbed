@@ -42,7 +42,20 @@ sudo chown testbed:testbed /usr/testbed
 ####1. Preparation steps:
 ##### a. Update the file: server/scripts/all-hosts with the PIs hostnames
 ##### b. please make a user called 'user', and give it sudo access without password over ssh (add it to sudoers)
+####### add the following line in /etc/sudoers:
+####### user    ALL=(ALL) NOPASSWD: ALL
 ##### (done automatically in step 7) c. ssh once to every PI, such that you have the key signature in your .ssh folder, and it does not complain later
+##### d. if you get the following strange error message on the PIa: 
+######(mesg: ttyname failed: Inappropriate ioctl for device), delete the last line in /root/.profile: (mesg n || true)
+######The file shall look like this (roughly), without the offending line: mesg n || true:
+# /root/.profile
+# # ~/.profile: executed by Bourne-compatible login shells.
+
+# if [ "$BASH" ]; then
+#   if [ -f ~/.bashrc ]; then
+#     . ~/.bashrc
+#   fi
+# fi
 
 ####2. these commands would install the required pkgs on the PIs
 parallel-ssh --timeout 0 --hosts ./server/scripts/all-hosts --user pi --inline "sudo mkdir -p /usr/testbed && sudo chown user:user /usr/testbed && sudo usermod -aG dialout user && sudo apt update && sudo apt -y --force-yes install picocom ssh python2.7 python-serial screen at ntpdate ntp"
