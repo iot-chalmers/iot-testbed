@@ -13,7 +13,7 @@ REMOTE_LOGS_PATH = "/home/user/logs"
 REMOTE_SCRIPTS_PATH = "/home/user/scripts"
 REMOTE_JN_SCRIPTS_PATH = os.path.join(REMOTE_SCRIPTS_PATH, "sky")
 REMOTE_TMP_PATH = "/home/user/tmp"
-REMOTE_FIRMWARE_PATH = os.path.join(REMOTE_TMP_PATH, "firmware.sky.hex")
+REMOTE_FIRMWARE_PATH = os.path.join(REMOTE_TMP_PATH, "firmware.sky.ihex")
 
 def pssh(hosts_path, cmd, message, inline=False):
   print "%s (on all: %s)" %(message, cmd)
