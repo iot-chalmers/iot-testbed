@@ -50,7 +50,6 @@ sudo chown testbed:testbed /usr/testbed
 ######The file shall look like this (roughly), without the offending line: mesg n || true:
 # /root/.profile
 # # ~/.profile: executed by Bourne-compatible login shells.
-
 # if [ "$BASH" ]; then
 #   if [ -f ~/.bashrc ]; then
 #     . ~/.bashrc
@@ -58,16 +57,16 @@ sudo chown testbed:testbed /usr/testbed
 # fi
 
 ####2. these commands would install the required pkgs on the PIs
-parallel-ssh --timeout 0 --hosts ./server/scripts/all-hosts --user pi --inline "sudo mkdir -p /usr/testbed && sudo chown user:user /usr/testbed && sudo usermod -aG dialout user && sudo apt update && sudo apt -y --force-yes install picocom ssh python2.7 python-serial screen at ntpdate ntp"
+parallel-ssh --timeout 0 --hosts ./server/scripts/all-hosts --user user --inline "sudo mkdir -p /usr/testbed && sudo chown user:user /usr/testbed && sudo usermod -aG dialout user && sudo apt update && sudo apt -y --force-yes install picocom ssh python2.7 python-serial screen at ntpdate ntp"
 
 ####3. install testbed SW to the server /usr and to PIs
 sh /home/testbed/iot-testbed/install.sh
 
 ####4. COPY JLINK rules file to allow flashing nrf52 for non-root users
-parallel-ssh --timeout 0 --hosts ./server/scripts/all-hosts --user pi --inline "sudo cp /home/user/scripts/nrf52/JLink_Linux_V632i_arm/99-jlink.rules /etc/udev/rules.d"
+parallel-ssh --timeout 0 --hosts ./server/scripts/all-hosts --user user --inline "sudo cp /home/user/scripts/nrf52/JLink_Linux_V632i_arm/99-jlink.rules /etc/udev/rules.d"
 
 ####5. IMPROTANT: login as root or sudo -i to each PI, and flash any file on the nrf52 board to update the JLink firmwarw
-parallel-ssh --timeout 0 --hosts ./server/scripts/all-hosts --user pi --inline "sudo -i && cd /home/user/scripts/nrf52 && ./install.sh null.nrf52.hex"
+parallel-ssh --timeout 0 --hosts ./server/scripts/all-hosts --user user --inline "sudo -i && cd /home/user/scripts/nrf52 && ./install.sh null.nrf52.hex"
 
 ####6. add PIs keys signatures -- execute on every user account on the server
 for ip in $(cat /usr/testbed/scripts/all-hosts); do 
