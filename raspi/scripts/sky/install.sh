@@ -13,8 +13,8 @@ while [  $COUNTER -lt 5 ]; do
     #reset
     /home/user/scripts/sky/skytools/msp430-bsl-linux --telosb -c $tty_path -r
     # erase and program
-    ~/scripts/sky/skytools/msp430-bsl-linux --telosb --speed=38400 --framesize=224 -c $tty_path -e --erasecycles=2 -p -I firmware_path && sleep 2
-    
+    ~/scripts/sky/skytools/msp430-bsl-linux --telosb --speed=38400 --framesize=224 -c $tty_path -e --erasecycles=2 -p -I $firmware_path && sleep 2
+
     if [ $? -e 0 ]; then
         break
     fi
