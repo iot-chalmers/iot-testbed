@@ -23,7 +23,7 @@ def pssh(hosts_path, cmd, message, inline=False):
 def pscp(hosts_path, src, dst, message):
   print "%s (on all: %s -> %s)" %(message, src, dst)
   return subprocess.call(["parallel-scp", "-h", hosts_path, "-o", "pssh-out", "-e", "pssh-err", "-l", "user", "-r", src, dst])
-  
+
 if __name__=="__main__":
   
   if len(sys.argv)<2:
@@ -37,7 +37,7 @@ if __name__=="__main__":
   firmware_path = None
   if os.path.isdir(job_dir):
    for f in os.listdir(job_dir):
-    if f.endswith(".sky.hex"):
+    if f.endswith(".sky.ihex"):
       firmware_path = os.path.join(job_dir, f)
       break
        
