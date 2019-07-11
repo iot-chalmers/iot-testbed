@@ -15,7 +15,7 @@ while [  $COUNTER -lt 5 ]; do
     # erase and program
     ~/scripts/sky/skytools/msp430-bsl-linux --telosb --speed=38400 --framesize=224 -c $tty_path -e --erasecycles=2 -p -I $firmware_path && sleep 2
 
-    if [ $? -e 0 ]; then
+    if [ $? -eq 0 ]; then
         break
     fi
 done
