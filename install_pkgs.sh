@@ -97,13 +97,26 @@ python /usr/testbed/scripts/testbed.py create --name 'null' --platform 'nrf52' -
 #   sleep 1;
 # done
 
+exit
+
 ##### Appendix: Adding a new user to the server
 ####Note that tsetbed SW is installed under /usr/testbed, and the sources (git hub repo) is under /home/testbed/iot-testbed
 ####1. add the users that need to use the testbedSW to the group testbed
-sudo usermod -aG testbed newuser
+sudo usermod -aG testbed NEWUSER
 ####2. add PIs keys signatures -- execute on every user account on the server
 for ip in $(cat /usr/testbed/scripts/all-hosts); do 
   if [ -z `ssh-keygen -F $ip` ]; then
     ssh-keyscan -H $ip >> ~/.ssh/known_hosts
   fi
 done
+####3. add the newuser public key to allow accessing PIs without password
+###### a. create ssh keys if you do not have them
+ssh -p17122 NEWUSER@sunlight.ds.informatik.uni-kiel.de
+ssh-keygen
+exit
+###### b. login as user testbed
+ssh -p17122 testbed@sunlight.ds.informatik.uni-kiel.de
+###### c. copy the user public key to PIs
+parallel-scp --hosts ./server/scripts/all-hosts --user user /home/NEWUSER/.ssh/id_rsa.pub /home/user/.ssh/id_rsa.pub.NEWUSER
+###### d. add the user public key to PIs authorized_keys
+parallel-ssh --timeout 0 --hosts ./server/scripts/all-hosts --user user --inline "cat /home/user/.ssh/id_rsa.pub.NEWUSER >>/home/user/.ssh/authorized_keys"
