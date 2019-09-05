@@ -1,0 +1,2 @@
+proc            /proc           proc    defaults          0       0
+tmpfs /home/user/tmp tmpfs nodev,nosuid,size=5M 0 0 
