@@ -1,4 +1,8 @@
 #!/bin/bash
+
+killall -9 picocom
+killall -9 serialdump
+killall -9 contiki-serialdump
 #search for the Korean clone CM5000MSP and the original Moteiv TMote
 tty_path1=`ls /dev/serial/by-id/usb-FTDI_MTM-CM5000*`
 tty_path2=`ls /dev/serial/by-id/usb-Moteiv_tmote_sky_*`
