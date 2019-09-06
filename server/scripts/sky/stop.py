@@ -10,9 +10,8 @@ import sys
 # from pssh import *
 
 REMOTE_LOGS_PATH = "/home/user/logs"
-#REMOTE_SCRIPTS_PATH = "/home/user/scripts"
-#REMOTE_JN_SCRIPTS_PATH = os.path.join(REMOTE_SCRIPTS_PATH, "sky")
-REMOTE_JN_SCRIPTS_PATH = "home/user/tmp/sky"
+REMOTE_SCRIPTS_PATH = "/home/user/scripts"
+REMOTE_JN_SCRIPTS_PATH = os.path.join(REMOTE_SCRIPTS_PATH, "../tmp/sky")
 REMOTE_TMP_PATH = "/home/user/tmp"
 REMOTE_NULL_FIRMWARE_PATH = os.path.join(REMOTE_JN_SCRIPTS_PATH, "null.sky.ihex")
 
