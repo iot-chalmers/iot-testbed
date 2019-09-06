@@ -95,3 +95,5 @@ if __name__=="__main__":
         sys.stdout.flush()
 
     print "done (%u lines)" %(line_cnt)
+  except Exception as e:
+    print(e)
