@@ -32,8 +32,9 @@ if __name__=="__main__":
   hosts_path = os.path.join(job_dir, "hosts")
   # Kill serialdump
   #pssh(hosts_path, "killall contiki-serialdump -9", "Stopping serialdump")
-  pssh(hosts_path, "killall serialdump -9", "Stopping serialdump")
-pssh(hosts_path, "killall picocom -9", "Stopping picocom")
+  pssh(hosts_path, '"killall -9 serialdump"', "Stopping serialdump")
+  pssh(hosts_path, '"killall -9 picocom"', "Stopping picocom")
+  pssh(hosts_path, '"killall -9 contiki-timestamp"', "Stopping contiki-timestamp")
   # Program the nodes with null firmware
   if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "install.sh"), REMOTE_NULL_FIRMWARE_PATH), "Uninstalling sky firmware") != 0:
     sys.exit(4)
