@@ -17,7 +17,6 @@ REMOTE_NULL_FIRMWARE_PATH = os.path.join(REMOTE_JN_SCRIPTS_PATH, "null.sky.ihex"
 
 def pssh(hosts_path, cmd, message, inline=False):
   print "%s (on all: %s)" %(message, cmd)
-  print(' '.join(["parallel-ssh", "-h", hosts_path, "-o", "pssh-out", "-e", "pssh-err", "-l", "user", "-i" if inline else "", cmd]))
   return subprocess.call(["parallel-ssh", "-h", hosts_path, "-o", "pssh-out", "-e", "pssh-err", "-l", "user", "-i" if inline else "", cmd])
   
 if __name__=="__main__":
@@ -32,9 +31,9 @@ if __name__=="__main__":
   hosts_path = os.path.join(job_dir, "hosts")
   # Kill serialdump
   #pssh(hosts_path, "killall contiki-serialdump -9", "Stopping serialdump")
-  pssh(hosts_path, '"if pgrep picocom; then killall -9 picocom;fi"', "Stopping serialdump")
-  pssh(hosts_path, '"if pgrep serialdump; then killall -9 serialdump;fi"', "Stopping picocom")
-  pssh(hosts_path, '"if pgrep contiki-timestamp; then killall -9 contiki-timestamp;fi"', "Stopping contiki-timestamp")
+  pssh(hosts_path, 'if pgrep picocom; then killall -9 picocom;fi', "Stopping serialdump")
+  pssh(hosts_path, 'if pgrep serialdump; then killall -9 serialdump;fi', "Stopping picocom")
+  pssh(hosts_path, 'if pgrep contiki-timestamp; then killall -9 contiki-timestamp;fi', "Stopping contiki-timestamp")
   # Program the nodes with null firmware
   if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "install.sh"), REMOTE_NULL_FIRMWARE_PATH), "Uninstalling sky firmware") != 0:
     sys.exit(4)
