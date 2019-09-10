@@ -13,7 +13,7 @@ def pssh(hosts_path, cmd, message, inline=False, merge_path=False):
   if merge_path:
     cmdpth = os.path.join(TESTBED_PI_PATH, cmd)
   else:
-  	cmdpath = cmd
+  	cmdpth = cmd
   return subprocess.call(["parallel-ssh", "-h", hosts_path, "-o", "pssh-out", "-e", "pssh-err", "-l", "user", "-i" if inline else "", cmdpth])
   
 def pscp(hosts_path, src, dst, message):
