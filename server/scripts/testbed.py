@@ -253,7 +253,7 @@ def status():
   out, err = process.communicate()
   curr_date = out.rstrip()
   # check current date on all nodes
-  if pssh(os.path.join(TESTBED_SCRIPTS_PATH, "all-hosts"), "check-date.sh %s"%(curr_date), "Testing connectivity with all nodes", inline=True) != 0:
+  if pssh(os.path.join(TESTBED_SCRIPTS_PATH, "all-hosts"), "check-date.sh %s"%(curr_date), "Testing connectivity with all nodes", merge_path=True, inline=True) != 0:
     do_quit(1)
 
 def list():
