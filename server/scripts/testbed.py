@@ -37,6 +37,7 @@ do_start_next = False
 metadata = None
 post_processing = None
 is_nested = False
+force_reboot = False
 
 MAX_START_ATTEMPTS = 3
 TESTBED_PATH = "/usr/testbed"
@@ -438,17 +439,22 @@ def stop(do_force):
   print history_message
 
 def reboot():
-  d = 60
-  load_curr_job_variables(False, True)
-  # reboot all PI nodes
-  if pssh(os.path.join(TESTBED_SCRIPTS_PATH, "all-hosts"), "sudo reboot", "Rebooting the PI nodes", merge_path=False) != 0:
-    do_quit(1)
-  # write history
-  ts = timestamp()
-  history_message = "%s: %s rebooted the PI nodes. Waiting %u s." %(ts, USER, d)
-  file_append(os.path.join(TESTBED_PATH, "history"), history_message + "\n")
-  print history_message
-  time.sleep(d) # wait 60s to give time for reboot
+  if force_reboot:
+    d = 60
+    load_curr_job_variables(False, True)
+    # reboot all PI nodes
+    if pssh(os.path.join(TESTBED_SCRIPTS_PATH, "all-hosts"), "sudo reboot", "Rebooting the PI nodes", merge_path=False) != 0:
+      do_quit(1)
+    # write history
+    ts = timestamp()
+    history_message = "%s: %s rebooted the PI nodes. Waiting %u s." %(ts, USER, d)
+    file_append(os.path.join(TESTBED_PATH, "history"), history_message + "\n")
+    print history_message
+    time.sleep(d) # wait 60s to give time for reboot
+  else:
+    history_message = "%s: %s has disabled reboot, but there was a problem beforehand" %(ts, USER)
+    file_append(os.path.join(TESTBED_PATH, "history"), history_message + "\n")
+    print history_message
 
 def usage():
   print "Usage: $testbed.py command [--parameter value]"
@@ -535,6 +541,8 @@ if __name__=="__main__":
        metadata = value
    elif opt == "--nested":
        is_nested = True
+   elif opt == "--with-reboot":
+       force_reboot = True
 
   if not is_nested and lock_is_taken():
       print "Lock is taken. Try a gain in a few seconds/minutes."
