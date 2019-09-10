@@ -409,7 +409,7 @@ def stop(do_force):
     # download logs before stopping
     download()
   # on all PI nodes: cleanup
-  if pssh(hosts_path, "/home/user/scripts/cleanup.sh %s"%(os.path.basename(job_dir)), "Cleaning up the PI nodes") != 0:
+  if pssh(hosts_path, "cleanup.sh %s"%(os.path.basename(job_dir)), "Cleaning up the PI nodes") != 0:
     print "Rebooting the nodes"
     reboot() # something went probably wrong with serialdump, reboot the nodes
     if not do_force:
