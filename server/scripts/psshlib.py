@@ -14,7 +14,7 @@ def pssh(hosts_path, cmd, message, inline=False, merge_path=False):
     cmdpth = os.path.join(TESTBED_PI_PATH, cmd)
   else:
   	cmdpth = cmd
-  return subprocess.call(["parallel-ssh", "-h", hosts_path, "-o", "pssh-out", "-e", "pssh-err", "-l", "user", "-i" if inline else "", cmdpth])
+  return subprocess.call(["parallel-ssh","--timeout", "240", "-h", hosts_path, "-o", "pssh-out", "-e", "pssh-err", "-l", "user", "-i" if inline else "", cmdpth])
   
 def pscp(hosts_path, src, dst, message):
   print "%s (on all: %s -> %s)" %(message, src, dst)
