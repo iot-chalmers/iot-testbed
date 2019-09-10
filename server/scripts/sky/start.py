@@ -6,8 +6,8 @@ import sys
 import os
 import subprocess
 import sys
-# sys.path.append('/usr/testbed/scripts')
-# from pssh import *
+sys.path.append('/usr/testbed/scripts')
+from psshlib import *
 
 REMOTE_LOGS_PATH = "/home/user/logs"
 REMOTE_SCRIPTS_PATH = "/home/user/scripts"
@@ -15,13 +15,6 @@ REMOTE_JN_SCRIPTS_PATH = os.path.join(REMOTE_SCRIPTS_PATH, "../tmp/sky")
 REMOTE_TMP_PATH = "/home/user/tmp"
 REMOTE_FIRMWARE_PATH = os.path.join(REMOTE_TMP_PATH, "firmware.sky.ihex")
 
-def pssh(hosts_path, cmd, message, inline=False):
-  print "%s (on all: %s)" %(message, cmd)
-  return subprocess.call(["parallel-ssh", "-h", hosts_path, "--timeout", "180", "-o", "pssh-out", "-e", "pssh-err", "-l", "user", "-i" if inline else "", cmd])
-  
-def pscp(hosts_path, src, dst, message):
-  print "%s (on all: %s -> %s)" %(message, src, dst)
-  return subprocess.call(["parallel-scp", "-h", hosts_path, "-o", "pssh-out", "-e", "pssh-err", "-l", "user", "-r", src, dst])
 
 if __name__=="__main__":
   
