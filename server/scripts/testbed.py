@@ -323,7 +323,7 @@ def start(job_id):
   while not started and attempt <= MAX_START_ATTEMPTS:
     print "Attempt #%u to start job %u" %(attempt, job_id)
     # on all PI nodes: prepare
-    if pssh(hosts_path, "prepare.sh %s"%(os.path.basename(job_dir)), "Preparing the PI nodes") == 0:
+    if pssh(hosts_path, "prepare.sh %s"%(os.path.basename(job_dir)), "Preparing the PI nodes", merge_path=True) == 0:
       # run platform start script
       start_script_path = os.path.join(TESTBED_SCRIPTS_PATH, platform, "start.py")
       if os.path.exists(start_script_path) and subprocess.call([start_script_path, job_dir]) == 0:
@@ -338,7 +338,7 @@ def start(job_id):
       stop_script_path = os.path.join(TESTBED_SCRIPTS_PATH, platform, "stop.py")
       if os.path.exists(stop_script_path):
         subprocess.call([stop_script_path, job_dir])
-      pssh(hosts_path, "cleanup.sh %s"%(os.path.basename(job_dir)), "Cleaning up the PI nodes")
+      pssh(hosts_path, "cleanup.sh %s"%(os.path.basename(job_dir)), "Cleaning up the PI nodes", merge_path=True)
       reboot()
       attempt += 1
   if not started:
@@ -409,7 +409,7 @@ def stop(do_force):
     # download logs before stopping
     download()
   # on all PI nodes: cleanup
-  if pssh(hosts_path, "cleanup.sh %s"%(os.path.basename(job_dir)), "Cleaning up the PI nodes") != 0:
+  if pssh(hosts_path, "cleanup.sh %s"%(os.path.basename(job_dir)), "Cleaning up the PI nodes", merge_path=True) != 0:
     print "Rebooting the nodes"
     reboot() # something went probably wrong with serialdump, reboot the nodes
     if not do_force:
@@ -441,7 +441,7 @@ def reboot():
   d = 60
   load_curr_job_variables(False, True)
   # reboot all PI nodes
-  if pssh(os.path.join(TESTBED_SCRIPTS_PATH, "all-hosts"), "sudo reboot", "Rebooting the PI nodes") != 0:
+  if pssh(os.path.join(TESTBED_SCRIPTS_PATH, "all-hosts"), "sudo reboot", "Rebooting the PI nodes", merge_path=False) != 0:
     do_quit(1)
   # write history
   ts = timestamp()
