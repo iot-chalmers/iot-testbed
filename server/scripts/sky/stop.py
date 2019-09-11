@@ -31,6 +31,7 @@ if __name__=="__main__":
   pssh(hosts_path, 'if pgrep picocom; then killall -9 picocom;fi', "Stopping picocom")
   pssh(hosts_path, 'if pgrep serialdump; then killall -9 serialdump;fi', "Stopping serialdump")
   pssh(hosts_path, 'if pgrep serial_forwarder; then killall -9 serial_forwarder;fi', "Stopping serial_forwarder")
+  pssh(hosts_path, 'if pgrep netcat; then killall -9 netcat;fi', "Stopping netcat (forwarder)")
   pssh(hosts_path, 'if pgrep contiki-timestamp; then killall -9 contiki-timestamp;fi', "Stopping contiki-timestamp")
   # Program the nodes with null firmware
   if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "install.sh"), REMOTE_NULL_FIRMWARE_PATH), "Uninstalling sky firmware") != 0:
