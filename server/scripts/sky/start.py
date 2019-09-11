@@ -24,6 +24,7 @@ if __name__=="__main__":
     
   # The only parameter contains the job directory
   job_dir = sys.argv[1]
+  forward_serial = True if sys.argv[2] == "forward" else False
 
   # Look for the firmware
   firmware_path = None
@@ -45,7 +46,11 @@ if __name__=="__main__":
   if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "install.sh"), REMOTE_FIRMWARE_PATH), "Installing sky firmware") != 0:
     sys.exit(4)
   # Start serialdump
-  remote_log_dir = os.path.join(REMOTE_LOGS_PATH, os.path.basename(job_dir), "log.txt")
-  if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "serialdump.sh"), remote_log_dir), "Starting serialdump") != 0:
-    sys.exit(5)
+  if not forward_serial:
+    remote_log_dir = os.path.join(REMOTE_LOGS_PATH, os.path.basename(job_dir), "log.txt")
+    if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "serialdump.sh"), remote_log_dir), "Starting serialdump") != 0:
+      sys.exit(5)
+  else:
+    if pssh(hosts_path, "%s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "serial_forwarder.sh"),), "Starting serialdump") != 0:
+      sys.exit(5)
 

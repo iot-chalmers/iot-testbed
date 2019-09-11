@@ -38,6 +38,7 @@ metadata = None
 post_processing = None
 is_nested = False
 force_reboot = False
+forward_serial = False
 
 MAX_START_ATTEMPTS = 3
 TESTBED_PATH = "/usr/testbed"
@@ -327,7 +328,7 @@ def start(job_id):
     if pssh(hosts_path, "prepare.sh %s"%(os.path.basename(job_dir)), "Preparing the PI nodes", merge_path=True) == 0:
       # run platform start script
       start_script_path = os.path.join(TESTBED_SCRIPTS_PATH, platform, "start.py")
-      if os.path.exists(start_script_path) and subprocess.call([start_script_path, job_dir]) == 0:
+      if os.path.exists(start_script_path) and subprocess.call([start_script_path, job_dir, "forward" if forward_serial else ""]) == 0:
         started = True
       else:
         print "Platform start script %s failed"%(start_script_path)
@@ -481,6 +482,8 @@ def usage():
   print "--metadata         'copy any metadata file to job directory'"
   print "--post-processing  'call a given post-processing script at the end of the run'"
   print "--nested           'set this if calling from a script that already took the lock'"
+  print "--with-reboot      'reboot the raspberry PIs if the job creation fails'"
+  print "--forward-serial   'Forwards the serial line data into a TCP socket (tcp://raspi:50000)'"
   print
   print "Usage of start:"
   print "$testbed.py start [--job-id ID]"
@@ -543,6 +546,8 @@ if __name__=="__main__":
        is_nested = True
    elif opt == "--with-reboot":
        force_reboot = True
+   elif opt == "--forward-serial":
+       forward_serial = True
 
   if not is_nested and lock_is_taken():
       print "Lock is taken. Try a gain in a few seconds/minutes."
