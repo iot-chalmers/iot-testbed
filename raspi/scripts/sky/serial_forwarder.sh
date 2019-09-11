@@ -17,7 +17,7 @@ stty -F $tty 115200 min 1 cs8 -cstopb -parenb -brkint -icrnl -imaxbel -opost -is
 
 screen -wipe
 screen -dmS skyscreen bash
-screen -S skyscreen -X stuff "nc -lt 0.0.0.0 $port <$tty >$tty\n"
+screen -S skyscreen -X stuff "netcat -lt 0.0.0.0 $port <$tty >$tty\n"
 sleep 1
 
 ps | grep "$! "
