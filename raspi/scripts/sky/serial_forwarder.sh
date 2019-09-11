@@ -6,7 +6,7 @@ then
         exit 1
 fi
 #set baudrate
-stty -F $tty 115200 min 1 cs8 -cstopb -parenb -brkint -icrnl -imaxbel -opost -isig -icanon -iexten -echo -echoe -echok -echo$
+stty -F $tty 115200 min 1 cs8 -cstopb -parenb -brkint -icrnl -imaxbel -opost -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke
 # start forwarding
 nc -lt 0.0.0.0 $port <$tty >$tty
 # distant closing will stop netcat
