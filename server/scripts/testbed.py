@@ -453,6 +453,7 @@ def reboot():
     print history_message
     time.sleep(d) # wait 60s to give time for reboot
   else:
+    ts = timestamp()
     history_message = "%s: %s has disabled reboot, but there was a problem beforehand" %(ts, USER)
     file_append(os.path.join(TESTBED_PATH, "history"), history_message + "\n")
     print history_message
