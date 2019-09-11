@@ -511,7 +511,7 @@ if __name__=="__main__":
     sys.exit(1)
 
   try:
-    opts, args = getopt.getopt(sys.argv[2:], "", ["name=", "platform=", "hosts=", "copy-from=", "duration=", "job-id=", "start", "force", "no-download", "start-next", "metadata=", "post-processing=", "nested"])
+    opts, args = getopt.getopt(sys.argv[2:], "", ["name=", "platform=", "hosts=", "copy-from=", "duration=", "job-id=", "start", "force", "no-download", "start-next", "metadata=", "post-processing=", "nested", "with-reboot", "forward-serial"])
   except getopt.GetoptError:
     usage()
 
