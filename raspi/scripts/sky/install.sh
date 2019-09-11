@@ -8,6 +8,11 @@ tty_path1=`ls /dev/serial/by-id/usb-FTDI_MTM-CM5000*`
 tty_path2=`ls /dev/serial/by-id/usb-Moteiv_tmote_sky_*`
 tty_path="$tty_path1$tty_path2"
 firmware_path=$1
+if [ -z "$tty_path" ]
+then
+    echo "Could not find sky device"
+    exit 1
+fi
 
 COUNTER=0
 while [  $COUNTER -lt 5 ]; do
