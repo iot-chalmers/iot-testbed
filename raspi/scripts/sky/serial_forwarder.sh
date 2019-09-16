@@ -1,5 +1,6 @@
 tty=`ls /dev/serial/by-id/usb-FTDI_MTM-CM5000*`
 port=50000
+log_path=$1
 if [ -z "$tty" ]
 then
         echo "Could not find sky device"
@@ -16,10 +17,10 @@ if pgrep screen; then killall -9 screen;fi
 stty -F $tty 115200 min 1 cs8 -cstopb -parenb -brkint -icrnl -imaxbel -opost -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke
 
 screen -wipe
-screen -dmS skyforwardscreen bash
-screen -dmS skypicocomscreen bash
-screen -S skyforwardscreen -X stuff "netcat -lkt 0.0.0.0 $port <$tty >$tty\n"
-screen -S skypicocomscreen -X stuff "sleep 1 && picocom --nolock --noreset -fh -b 115200 --imap lfcrlf $tty_path | ~/scripts/contiki-timestamp > $log_path\n"
+screen -dmS skyscreen bash
+screen -dmS skyscreen bash
+# cat /dev/serial/by-id/usb-FTDI_MTM-CM5000_MF3EJ3O1-if00-port0 | tee -a test | nc -lkt 0.0.0.0 50000 >/dev/serial/by-id/usb-FTDI_MTM-CM5000_MF3EJ3O1-if00-port0
+screen -S skyforwardscreen -X stuff "cat $tty | tee -a $log_path | nc -lkt 0.0.0.0 $port >$tty\n"
 sleep 1
 
 ps | grep "$! "
