@@ -52,6 +52,6 @@ if __name__=="__main__":
       sys.exit(5)
   else:
     remote_log_dir = os.path.join(REMOTE_LOGS_PATH, os.path.basename(job_dir), "log.txt")
-    if pssh(hosts_path, "%s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "serial_forwarder.sh"), remote_log_dir), "Starting serialdump") != 0:
+    if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "serial_forwarder.sh"), remote_log_dir), "Starting serialdump") != 0:
       sys.exit(5)
 
