@@ -16,8 +16,10 @@ if pgrep screen; then killall -9 screen;fi
 stty -F $tty 115200 min 1 cs8 -cstopb -parenb -brkint -icrnl -imaxbel -opost -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke
 
 screen -wipe
-screen -dmS skyscreen bash
-screen -S skyscreen -X stuff "netcat -lt 0.0.0.0 $port <$tty >$tty\n"
+screen -dmS skyforwardscreen bash
+screen -dmS skypicocomscreen bash
+screen -S skyforwardscreen -X stuff "netcat -lkt 0.0.0.0 $port <$tty >$tty\n"
+screen -S skypicocomscreen -X stuff "sleep 1 && picocom --nolock --noreset -fh -b 115200 --imap lfcrlf $tty_path | ~/scripts/contiki-timestamp > $log_path\n"
 sleep 1
 
 ps | grep "$! "
