@@ -1,8 +1,10 @@
 #!/bin/bash
 
-killall -9 picocom
-killall -9 serialdump
-killall -9 contiki-serialdump
+if pgrep screen; then screen -X -S skyscreen quit;fi
+if pgrep screen; then killall -9 screen;fi
+if pgrep picocom; then killall -9 picocom;fi
+if pgrep serialdump; then killall -9 serialdump;fi
+if pgrep serial_forwarder; then killall -9 serial_forwarder;fi
 #search for the Korean clone CM5000MSP and the original Moteiv TMote
 tty_path1=`ls /dev/serial/by-id/usb-FTDI_MTM-CM5000*`
 tty_path2=`ls /dev/serial/by-id/usb-Moteiv_tmote_sky_*`
