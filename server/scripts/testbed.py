@@ -232,8 +232,6 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
   if duration != None:
     # create duration file in job directory
     file_write(os.path.join(job_dir, "duration"), duration + "\n")
-  # success: update next_job file
-  file_write(next_job_path, "%u\n"%(job_id+1))
   # write creation timestamp
   ts = timestamp()
   file_write(os.path.join(job_dir, ".created"), ts + "\n")  # write history
@@ -361,6 +359,8 @@ def start(job_id):
     py_testbed_script_path = os.path.join(TESTBED_SCRIPTS_PATH, "testbed.py")
     os.system("echo '%s stop --force --start-next'  | at now + %u min" %(py_testbed_script_path, duration + 1))
   print history_message
+  # success, set next job id
+  file_write(next_job_path, "%u\n"%(job_id+1))
 
 def rsync(src, dst):
   print "rsync -avz %s %s" %(src, dst)
