@@ -71,9 +71,9 @@ def file_set_permissions(path):
   if path.startswith(TESTBED_PATH) and not os.path.exists(path):
     file = open(path, "w")
     file.close()
-    #uid = pwd.getpwnam(USER).pw_uid
-    #gid = grp.getgrnam("testbed").gr_gid
-    #os.chown(path, uid, gid)
+    uid = pwd.getpwnam(USER).pw_uid
+    gid = grp.getgrnam("testbed").gr_gid
+    os.chown(path, uid, gid)
     if os.path.abspath(path) == CURR_JOB_PATH:
       # the file 'curr_job' is only writeable by us
       os.chmod(path, 0640)
