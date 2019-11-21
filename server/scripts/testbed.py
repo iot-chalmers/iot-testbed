@@ -47,6 +47,7 @@ LOCK_PATH = os.path.join(TESTBED_PATH, "lock")
 CURR_JOB_PATH = os.path.join(TESTBED_PATH, "curr_job")
 HOME = os.path.expanduser("~")
 USER = getpass.getuser()
+next_job_path = os.path.join(TESTBED_PATH, "next_job")
 
 def lock_is_taken():
     return os.path.exists(LOCK_PATH)
@@ -193,7 +194,6 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
       duration = file_read(os.path.join(copy_from, "duration"))
 
   # read next job ID from 'next_job' file
-  next_job_path = os.path.join(TESTBED_PATH, "next_job")
   if not os.path.exists(next_job_path):
     job_id = 0
   else:
