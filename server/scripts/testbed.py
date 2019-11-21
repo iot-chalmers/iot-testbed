@@ -48,8 +48,7 @@ CURR_JOB_PATH = os.path.join(TESTBED_PATH, "curr_job")
 HOME = os.path.expanduser("~")
 USER = getpass.getuser()
 next_job_path = os.path.join(TESTBED_PATH, "next_job")
-next_job_path_user = os.path.join(TESTBED_PATH, "next_job")
-next_job_path_user = os.path.join(next_job_path_user, USER)
+next_job_path_user = os.path.join(TESTBED_PATH, "next_job_%s" %(USER))
 
 def lock_is_taken():
     return os.path.exists(LOCK_PATH)
