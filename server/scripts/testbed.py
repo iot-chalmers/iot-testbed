@@ -48,6 +48,8 @@ CURR_JOB_PATH = os.path.join(TESTBED_PATH, "curr_job")
 HOME = os.path.expanduser("~")
 USER = getpass.getuser()
 next_job_path = os.path.join(TESTBED_PATH, "next_job")
+next_job_path_user = os.path.join(TESTBED_PATH, "next_job")
+next_job_path_user = os.path.join(next_job_path_user, USER)
 
 def lock_is_taken():
     return os.path.exists(LOCK_PATH)
@@ -193,19 +195,31 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
     if copy_from != None and os.path.isfile(os.path.join(copy_from, "duration")):
       duration = file_read(os.path.join(copy_from, "duration"))
 
-  # read next job ID from 'next_job' file
-  if not os.path.exists(next_job_path):
-    job_id = 0
+  # read and update next job ID from max 'next_job' 'next_job?user' files
+  if os.path.exists(next_job_path_user):
+    job_id_user = int(file_read(next_job_path_user))
   else:
-    job_id = int(file_read(next_job_path))
+    job_id_user = 0
+    file_write(next_job_path_user, "%u\n"%(job_id_user))
+
+  if os.path.exists(next_job_path):
+    job_id= int(file_read(next_job_path))
+  else:
+    job_id = job_id_user
+    file_write(next_job_path, "%u\n"%(job_id))
+
+  job_id_user = max(job_id, job_id_user)
+  #file_write(next_job_path, "%u\n"%(job_id))
+  file_write(next_job_path_user, "%u\n"%(job_id_user))
+
   # check if job id is already used
-  job_dir = get_job_directory(job_id)
+  job_dir = get_job_directory(job_id_user)
   if job_dir != None:
-    print "Job %d already exists! Delete %s before creating a new job." %(job_id, job_dir)
+    print "Job %d already exists! Delete %s before creating a new job." %(job_id_user, job_dir)
     do_quit(1)
 
   # create user job directory
-  job_dir = os.path.join(HOME, "jobs", "%u_%s" %(job_id, name))
+  job_dir = os.path.join(HOME, "jobs", "%u_%s" %(job_id_user, name))
   # initialize job directory from copy_from command line parameter
   if copy_from != None:
     if os.path.isdir(copy_from):
@@ -235,11 +249,12 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
   # write creation timestamp
   ts = timestamp()
   file_write(os.path.join(job_dir, ".created"), ts + "\n")  # write history
-  history_message = "%s: %s created job %u, platform:%s, hosts:%s, copy-from:%s, directory:%s" %(ts, USER, job_id, platform, hosts, copy_from, job_dir)
+  history_message = "%s: %s created job %u, platform:%s, hosts:%s, copy-from:%s, directory:%s" %(ts, USER, job_id_user, platform, hosts, copy_from, job_dir)
   file_append(os.path.join(TESTBED_PATH, "history"), history_message + "\n")
   print history_message
   if do_start:
-    start(job_id)
+    start(job_id_user)
+  file_write(next_job_path_user, "%u\n"%(job_id_user+1))
 
 def status():
   load_curr_job_variables(False, False)
