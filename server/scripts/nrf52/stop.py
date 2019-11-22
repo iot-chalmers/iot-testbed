@@ -27,8 +27,8 @@ if __name__=="__main__":
        
   hosts_path = os.path.join(job_dir, "hosts")
   # Kill serialdump
-  pssh(hosts_path, 'if pgrep picocom; then killall -9 picocom;fi', "Stopping picocom")
-  pssh(hosts_path, 'if pgrep screen; then screen -X -S nrf52screen quit; screen -wipe;fi', "Quitting screen")
+  pssh(hosts_path, 'if pgrep picocom; then killall -9 picocom; fi; if pgrep screen; then screen -X -S nrf52screen quit; fi; if pgrep screen; then killall -9 screen; fi; if pgrep contiki-timestamp; then killall -9 contiki-timestamp; fi;', "Stopping picocom, screen and contiki-timestamp")
+  # pssh(hosts_path, 'if pgrep screen; then screen -X -S nrf52screen quit; fi', "Quitting screen")
   #pssh(hosts_path, "killall -9 screen", "Killing screen")
 
   # Program the nodes with null firmware

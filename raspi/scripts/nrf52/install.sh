@@ -4,7 +4,7 @@
 #sleep 1
 /home/user/scripts/usb-hub-off.sh
 /home/user/scripts/usb-hub-on.sh
-sleep 1
+sleep 0.5
 # Now program the node
 firmware_path=$1
 #get script from https://raw.githubusercontent.com/WayneKeenan/nrfjprog.sh/master/nrfjprog.sh
@@ -14,9 +14,9 @@ export PATH=$PATH:/home/user/scripts/nrf52/JLink_Linux_V632i_arm
 if [ $? -ne 0 ]; then
     exit 1
 fi
-/home/user/scripts/nrf52/JLink_Linux_V632i_arm/nrfjprog.sh --reset -f nrf52
-sleep 0.5
+
 # Reboot the node
-#/home/user/scripts/usb-hub-off.sh
-#/home/user/scripts/usb-hub-on.sh
-#sleep 1
+/home/user/scripts/usb-hub-off.sh
+/home/user/scripts/usb-hub-on.sh
+sleep 0.5
+/home/user/scripts/nrf52/JLink_Linux_V632i_arm/nrfjprog.sh --reset -f nrf52
