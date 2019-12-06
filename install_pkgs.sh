@@ -10,7 +10,7 @@
 
 ####install packages on server
 sudo apt update --fix-missing
-sudo apt install -y python-2.7 iptables-persistent dhcpdump rsync default-jre default-jdk pssh putty-tools clusterssh libffi screen at ntp tree
+sudo apt install -y python-2.7 iptables-persistent dhcpdump rsync default-jre default-jdk pssh putty-tools clusterssh libffi* cmake python-pip libssl-dev python-libssh2 python-openssl python-3 python3-pip screen at ntp tree isc-dhcp-server
 
 #sudo apt install -y gcc-4.9-arm-linux-gnueabihf-base #you might only find a newer version. install it for the time being
 #sudo apt-get install -y g++-arm-linux-gnueabihf
