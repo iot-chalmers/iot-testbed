@@ -57,12 +57,20 @@ def lock_is_taken():
 
 def lock_aquire():
     if not is_nested:
-        open(LOCK_PATH, 'a').close()
+        try:
+            open(LOCK_PATH, 'a').close()
+        except OSError as e:
+            print(e)
+            sys.exit(1)
 
 
 def lock_release():
-    if not is_nested:
-        os.remove(LOCK_PATH)
+    if not is_nested and lock_is_taken():
+        try:
+            os.remove(LOCK_PATH)
+        except OSError as e:
+            print(e)
+            sys.exit(1)
 
 
 def do_quit(status):
@@ -77,36 +85,52 @@ def timestamp():
 def file_set_permissions(path):
     # whenever writing to a file in TESTBED_PATH for the first time, set group as "testbed"
     if path.startswith(TESTBED_PATH) and not os.path.exists(path):
-        file = open(path, "w")
-        file.close()
-        uid = pwd.getpwnam(USER).pw_uid
-        gid = grp.getgrnam("testbed").gr_gid
-        os.chown(path, uid, gid)
-        if os.path.abspath(path) == CURR_JOB_PATH:
-            # the file 'curr_job' is only writeable by us
-            os.chmod(path, 640)
-        else:
-            # other files under TESTBED_PATH are writeable by the group 'testbed'
-            os.chmod(path, 660)
+        try:
+            file = open(path, "w")
+            file.close()
+            uid = pwd.getpwnam(USER).pw_uid
+            gid = grp.getgrnam("testbed").gr_gid
+            os.chown(path, uid, gid)
+            if os.path.abspath(path) == CURR_JOB_PATH:
+                # the file 'curr_job' is only writeable by us
+                os.chmod(path, 640)
+            else:
+                # other files under TESTBED_PATH are writeable by the group 'testbed'
+                os.chmod(path, 660)
+        except Exception as e:
+            print(e)
+            do_quit(1)
 
 
 def file_read(path):
     if os.path.exists(path):
-        return open(path, "r").read().rstrip()
+        try:
+            return open(path, "r").read().rstrip()
+        except OSError as e:
+            print(e)
+            do_quit(1)
     else:
         return None
 
 
 def file_write(path, str):
     file_set_permissions(path)
-    file = open(path, "w")
-    file.write(str)
+    try:
+        file = open(path, "w")
+        file.write(str)
+    except OSError as e:
+        print(e)
+        do_quit(1)
 
 
 def file_append(path, str):
     file_set_permissions(path)
-    file = open(path, "a")
-    file.write(str)
+    try:
+        file = open(path, "a")
+        file.write(str)
+    except OSError as e:
+        print(e)
+        do_quit(1)
 
 # checks is any element of aset is in seq
 
@@ -166,9 +190,9 @@ def load_job_variables(job_id):
     # get path to the hosts file (list of PI nodes involved)
     hosts_path = os.path.join(job_dir, "hosts")
     # get path to the duration file
-    duration_path = os.path.join(job_dir, "duration")
+    # duration_path = os.path.join(job_dir, "duration")
     duration = file_read(os.path.join(job_dir, "duration"))
-    if duration != None:
+    if duration:
         duration = int(duration)
 
 
@@ -177,8 +201,8 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
     if do_start:
         load_curr_job_variables(False, True)
     # if name is not set, use either the copy-from dir name or "noname"
-    if name == None:
-        if copy_from != None:
+    if not name:
+        if copy_from:
             name = os.path.basename(copy_from).split('.')[0]
         else:
             name = "noname"
@@ -188,8 +212,8 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
         do_quit(1)
 
     # if host is not set, take it from copy-from or use the default all-hosts file
-    if hosts == None:
-        if copy_from != None and os.path.exists(os.path.join(copy_from, "hosts")):
+    if not hosts:
+        if copy_from and os.path.exists(os.path.join(copy_from, "hosts")):
             hosts = os.path.join(copy_from, "hosts")
         else:
             hosts = os.path.join(TESTBED_SCRIPTS_PATH, "all-hosts")
@@ -199,8 +223,8 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
         do_quit(1)
 
     # if platform is not set, take it from copy-from or use "noplatform"
-    if platform == None:
-        if copy_from != None and os.path.isfile(os.path.join(copy_from, "platform")):
+    if not platform:
+        if copy_from and os.path.isfile(os.path.join(copy_from, "platform")):
             platform = file_read(os.path.join(copy_from, "platform"))
         else:
             platform = "noplatform"
@@ -211,8 +235,8 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
         do_quit(1)
 
     # if duration is not set, take it from copy-from
-    if duration == None:
-        if copy_from != None and os.path.isfile(os.path.join(copy_from, "duration")):
+    if not duration:
+        if copy_from and os.path.isfile(os.path.join(copy_from, "duration")):
             duration = file_read(os.path.join(copy_from, "duration"))
 
     # read and update next job ID from max 'next_job' 'next_job?user' files
@@ -229,12 +253,12 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
         file_write(next_job_path, "%u\n" % (job_id))
 
     job_id_user = max(job_id, job_id_user)
-    #file_write(next_job_path, "%u\n"%(job_id))
+    # file_write(next_job_path, "%u\n"%(job_id))
     file_write(next_job_path_user, "%u\n" % (job_id_user))
 
     # check if job id is already used
     job_dir = get_job_directory(job_id_user)
-    if job_dir != None:
+    if job_dir:
         print("Job %d already exists! Delete %s before creating a new job." %
               (job_id_user, job_dir))
         do_quit(1)
@@ -242,31 +266,65 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
     # create user job directory
     job_dir = os.path.join(HOME, "jobs", "%u_%s" % (job_id_user, name))
     # initialize job directory from copy_from command line parameter
-    if copy_from != None:
+    if copy_from:
         if os.path.isdir(copy_from):
             # copy full directory
-            shutil.copytree(copy_from, job_dir)
+            try:
+                shutil.copytree(copy_from, job_dir)
+            except Exception as e:
+                print("Could not copy directory %s to %s" %
+                      (copy_from, job_dir))
+                print(e)
+                do_quit(1)
         else:
             # copy single file
-            os.makedirs(job_dir)
-            shutil.copyfile(copy_from, os.path.join(
-                job_dir, os.path.basename(copy_from)))
+            copy_to = os.path.join(job_dir, os.path.basename(copy_from))
+            try:
+                os.makedirs(job_dir)
+                shutil.copyfile(copy_from, copy_to)
+            except Exception as e:
+                print("Could not copy file %s to %s" % (copy_from, copy_to))
+                print(e)
+                do_quit(1)
     else:
-        os.makedirs(job_dir)
+        try:
+            os.makedirs(job_dir)
+        except OSError as e:
+            print("Failed to create directory %s" % job_dir)
+            print(e)
+            do_quit(1)
     # copy metadata file, if any
-    if metadata != None:
-        shutil.copyfile(metadata, os.path.join(
-            job_dir, os.path.basename(metadata)))
+    if metadata:
+        dest = os.path.join(
+            job_dir, os.path.basename(metadata))
+        try:
+            shutil.copyfile(metadata, dest)
+        except Exception as e:
+            print("Failed to copy metadata to %s" % dest)
+            print(e)
+            do_quit(1)
     # copy post-processing script, if any
-    if post_processing != None:
+    if post_processing:
         post_processing_path = os.path.join(job_dir, "post_processing.sh")
-        shutil.copyfile(post_processing, post_processing_path)
-        os.chmod(post_processing_path, 740)
+        try:
+            shutil.copyfile(post_processing, post_processing_path)
+            os.chmod(post_processing_path, 740)
+        except Exception as e:
+            print("Failed to copy post-processing script %s to %s" %
+                  (post_processing, post_processing_path))
+            print(e)
+            do_quit(1)
     # create host file in job directory
-    shutil.copyfile(hosts, os.path.join(job_dir, "hosts"))
+    try:
+        shutil.copyfile(hosts, os.path.join(job_dir, "hosts"))
+    except OSError as e:
+        print("Failed to copy host file %s to %s" %
+              (hosts, os.path.join(job_dir, "hosts")))
+        print(e)
+        do_quit(1)
     # create platform file in job directory
     file_write(os.path.join(job_dir, "platform"), platform + "\n")
-    if duration != None:
+    if duration:
         # create duration file in job directory
         file_write(os.path.join(job_dir, "duration"), duration + "\n")
     # write creation timestamp
@@ -290,11 +348,16 @@ def status():
             curr_job_date).strftime('%Y-%m-%d %H:%M:%S')
         print("Currently active job: %u, owned by %s, started %s" %
               (curr_job, curr_job_owner, curr_job_date_str))
-    process = subprocess.Popen(['date', '+%s%N'], stdout=subprocess.PIPE)
-    out, err = process.communicate()
-    curr_date = out.rstrip()
-    # check current date on all nodes
-    if pssh(os.path.join(TESTBED_SCRIPTS_PATH, "all-hosts"), "check-date.sh %s" % (curr_date), "Testing connectivity with all nodes", merge_path=True, inline=True) != 0:
+    try:
+        process = subprocess.Popen(['date', '+%s%N'], stdout=subprocess.PIPE)
+        out, _err = process.communicate()
+        curr_date = out.rstrip()
+        # check current date on all nodes
+        if pssh(os.path.join(TESTBED_SCRIPTS_PATH, "all-hosts"), "check-date.sh %s" % (curr_date), "Testing connectivity with all nodes", merge_path=True, inline=True) != 0:
+            do_quit(1)
+    except Exception as e:
+        print("Failed to check for dates on nodes")
+        print(e)
         do_quit(1)
 
 
@@ -348,7 +411,6 @@ def list():
 
 
 def get_next_job_id():
-    all_jobs = {}
     jobs_dir = os.path.join(HOME, "jobs")
     if os.path.isdir(jobs_dir):
         for f in sorted(os.listdir(jobs_dir)):
@@ -362,11 +424,11 @@ def get_next_job_id():
 
 
 def start(job_id):
-    if job_id == None:
+    if not job_id:
         job_id = get_next_job_id()
-        if job_id == None:
+        if not job_id:
             print("No next job found.")
-            return None
+            return
     load_curr_job_variables(False, True)
     load_job_variables(job_id)
     if os.path.exists(os.path.join(job_dir, ".started")):
@@ -582,20 +644,23 @@ def usage():
     print("$testbed.py create --copy-from /usr/testbed/examples/jn516x-hello-world --start     'create and start a JN516x hello-world job'")
     print("$testbed.py stop                                                                    'stop the job and download the logs'")
     print()
-    do_quit(2)
 
 
 if __name__ == "__main__":
 
+    # Check, if enough arguments are given
     if len(sys.argv) < 2:
         usage()
         sys.exit(1)
 
+    # Try to fettch arguments
     try:
         opts, args = getopt.getopt(sys.argv[2:], "", ["name=", "platform=", "hosts=", "copy-from=", "duration=", "job-id=", "start",
                                                       "force", "no-download", "start-next", "metadata=", "post-processing=", "nested", "with-reboot", "forward-serial"])
-    except getopt.GetoptError:
+    except getopt.GetoptError as e:
+        print(e)
         usage()
+        sys.exit(1)
 
     command = sys.argv[1]
 
@@ -609,7 +674,11 @@ if __name__ == "__main__":
         elif opt == "--copy-from":
             copy_from = os.path.normpath(value)
         elif opt == "--job-id":
-            job_id = int(value)
+            try:
+                job_id = int(value)
+            except Exception as e:
+                print("Error: --job-id expects an number as argument")
+                sys.exit(1)
         elif opt == "--duration":
             duration = value
         elif opt == "--start":
@@ -643,6 +712,7 @@ if __name__ == "__main__":
     elif command == "status":
         status()
     elif command == "list":
+        # TODO: continue here
         list()
     elif command == "start":
         start(job_id)
