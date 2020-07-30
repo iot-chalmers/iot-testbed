@@ -59,7 +59,8 @@ def lock_aquire():
     if not is_nested:
         try:
             open(LOCK_PATH, 'a').close()
-        except OSError as e:
+        except Exception as e:
+            print("Could not aquire lock!")
             print(e)
             sys.exit(1)
 
@@ -68,7 +69,8 @@ def lock_release():
     if not is_nested and lock_is_taken():
         try:
             os.remove(LOCK_PATH)
-        except OSError as e:
+        except Exception as e:
+            print("Could not release lock!")
             print(e)
             sys.exit(1)
 
@@ -98,6 +100,7 @@ def file_set_permissions(path):
                 # other files under TESTBED_PATH are writeable by the group 'testbed'
                 os.chmod(path, 660)
         except Exception as e:
+            print("Failed to set permissions for file '%s'" % path)
             print(e)
             do_quit(1)
 
@@ -106,7 +109,8 @@ def file_read(path):
     if os.path.exists(path):
         try:
             return open(path, "r").read().rstrip()
-        except OSError as e:
+        except Exception as e:
+            print("Failed to read contents of file '%s'" % path)
             print(e)
             do_quit(1)
     else:
@@ -118,7 +122,8 @@ def file_write(path, str):
     try:
         file = open(path, "w")
         file.write(str)
-    except OSError as e:
+    except Exception as e:
+        print("Failed to write to file '%s'" % path)
         print(e)
         do_quit(1)
 
@@ -128,7 +133,8 @@ def file_append(path, str):
     try:
         file = open(path, "a")
         file.write(str)
-    except OSError as e:
+    except Exception as e:
+        print("Failed to append content to file '%s'" % path)
         print(e)
         do_quit(1)
 
@@ -161,7 +167,11 @@ def load_curr_job_variables(need_curr_job, need_no_curr_job):
         curr_job = None
         curr_job_owner = None
     else:
-        curr_job = int(file_read(CURR_JOB_PATH))
+        try:
+            curr_job = int(file_read(CURR_JOB_PATH))
+        except Exception:
+            print("Content of '%s' is no valid number" % CURR_JOB_PATH)
+            do_quit(1)
         curr_job_owner = pwd.getpwuid(os.stat(CURR_JOB_PATH).st_uid).pw_name
         curr_job_date = os.stat(CURR_JOB_PATH).st_ctime
     if need_curr_job and not curr_job:
@@ -368,26 +378,34 @@ def list():
         for f in os.listdir(jobs_dir):
             match = re.search(r'(\d+)_(.*)+', f)
             if match:
-                job_id = int(match.group(1))
+                try:
+                    job_id = int(match.group(1))
+                except Exception:
+                    print(
+                        "Files in '%s' are not named properly to retrieve the job number." % jobs_dir)
+                    do_quit(1)
                 job_dir = os.path.join(jobs_dir, f)
                 platform = file_read(os.path.join(job_dir, "platform"))
                 duration = file_read(os.path.join(job_dir, "duration"))
-                if duration == None:
+                if not duration:
                     duration = 999999
                 else:
-                    duration = int(duration)
+                    try:
+                        duration = int(duration)
+                    except Exception:
+                        duration = 999999
                 created = file_read(os.path.join(job_dir, ".created"))
-                if created == None:
+                if not created:
                     created = "--"
                 else:
                     created = created.split('.')[0]
                 started = file_read(os.path.join(job_dir, ".started"))
-                if started == None:
+                if not started:
                     started = "--"
                 else:
                     started = started.split('.')[0]
                 stopped = file_read(os.path.join(job_dir, ".stopped"))
-                if stopped == None:
+                if not stopped:
                     stopped = "--"
                 else:
                     stopped = stopped.split('.')[0]
@@ -407,7 +425,6 @@ def list():
             all_jobs[job_id]['started'], all_jobs[job_id]['stopped'],
             all_jobs[job_id]['n_log_files']
         ))
-    return None
 
 
 def get_next_job_id():
@@ -416,7 +433,12 @@ def get_next_job_id():
         for f in sorted(os.listdir(jobs_dir)):
             match = re.search(r'(\d+)_(.*)+', f)
             if match:
-                job_id = int(match.group(1))
+                try:
+                    job_id = int(match.group(1))
+                except Exception:
+                    print(
+                        "Files in '%s' are not named properly to retrieve the job number." % jobs_dir)
+                    do_quit(1)
                 job_dir = os.path.join(jobs_dir, f)
                 if not os.path.isfile(os.path.join(job_dir, ".started")):
                     return job_id
@@ -475,7 +497,7 @@ def start(job_id):
         ts, USER, job_id, platform, job_dir)
     file_append(os.path.join(TESTBED_PATH, "history"), history_message + "\n")
     # schedule end of job if a duration is set
-    if duration != None:
+    if duration:
         print("Scheduling end of job in %u min" % (duration))
         # schedule in duration + 1 to account for the currently begun minute
         py_testbed_script_path = os.path.join(
@@ -494,7 +516,7 @@ def rsync(src, dst):
 
 def download():
     load_curr_job_variables(True, False)
-    job_id = curr_job
+    # job_id = curr_job
     load_job_variables(curr_job)
     # download log file from all PI nodes
     remote_logs_dir = os.path.join(
@@ -509,7 +531,12 @@ def download():
     for host in hosts:
         host_log_path = os.path.join(logs_dir, host)
         if not os.path.exists(host_log_path):
-            os.makedirs(host_log_path)
+            try:
+                os.makedirs(host_log_path)
+            except Exception as e:
+                print("Failed to create directory '%s'" % host_log_path)
+                print(e)
+                do_quit(1)
         curr_remote_logs_uri = "user@%s:" % (host) + \
             os.path.join(remote_logs_dir, "*")
         p = multiprocessing.Process(target=rsync, args=(
@@ -549,7 +576,10 @@ def stop(do_force):
         if not do_force:
             do_quit(1)
     # remove current job-related files
-    os.remove(CURR_JOB_PATH)
+    try:
+        os.remove(CURR_JOB_PATH)
+    except Exception:
+        print("Failed to remove '%s'" % CURR_JOB_PATH)
     # write stop timestamp
     ts = timestamp()
     file_write(os.path.join(job_dir, ".stopped"), ts + "\n")
@@ -579,6 +609,7 @@ def reboot():
         load_curr_job_variables(False, True)
         # reboot all PI nodes
         if pssh(os.path.join(TESTBED_SCRIPTS_PATH, "all-hosts"), "sudo reboot", "Rebooting the PI nodes", merge_path=False) != 0:
+            print("Failed to restart the PI nodes")
             do_quit(1)
         # write history
         ts = timestamp()
@@ -712,7 +743,6 @@ if __name__ == "__main__":
     elif command == "status":
         status()
     elif command == "list":
-        # TODO: continue here
         list()
     elif command == "start":
         start(job_id)
