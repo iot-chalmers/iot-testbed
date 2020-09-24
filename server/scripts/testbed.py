@@ -371,7 +371,7 @@ def start(job_id):
     print "Scheduling end of job in %u min" %(duration)
 	# schedule in duration + 1 to account for the currently begun minute
     py_testbed_script_path = os.path.join(TESTBED_SCRIPTS_PATH, "testbed.py")
-    os.system("echo '%s stop --force --start-next'  | at now + %u min" %(py_testbed_script_path, duration + 1))
+    os.system("echo '%s stop --force --start-next'  | at -q t now + %u min" %(py_testbed_script_path, duration + 1))
   print history_message
   # success, set next job id
   file_write(next_job_path, "%u\n"%(job_id+1))
@@ -440,7 +440,7 @@ def stop(do_force):
   file_append(os.path.join(TESTBED_PATH, "history"), history_message + "\n")
   # kill at jobs (jobs scheduled to stop in the future)
   print "Killing pending at jobs"
-  os.system("for i in `atq | awk '{print $1}'`;do atrm $i;done")
+  os.system("for i in `atq -q t | awk '{print $1}'`;do atrm $i;done")
   # start next job if requested
   if do_start_next:
     print "Starting next job"
