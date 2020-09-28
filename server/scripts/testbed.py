@@ -42,7 +42,7 @@ force_reboot = False
 forward_serial = False
 
 MAX_START_ATTEMPTS = 3
-TESTBED_PATH = "/usr/testbed"
+TESTBED_PATH = "/usr/testbed/server"
 # TESTBED_PATH = "/Users/louis/Documents/teaching/ds/iot-testbed/server"
 TESTBED_SCRIPTS_PATH = os.path.join(TESTBED_PATH, "scripts")
 LOCK_PATH = os.path.join(TESTBED_PATH, "lock")
