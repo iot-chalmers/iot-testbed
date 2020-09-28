@@ -43,7 +43,6 @@ forward_serial = False
 
 MAX_START_ATTEMPTS = 3
 TESTBED_PATH = "/usr/testbed/server"
-# TESTBED_PATH = "/Users/louis/Documents/teaching/ds/iot-testbed/server"
 TESTBED_SCRIPTS_PATH = os.path.join(TESTBED_PATH, "scripts")
 LOCK_PATH = os.path.join(TESTBED_PATH, "lock")
 CURR_JOB_PATH = os.path.join(TESTBED_PATH, "curr_job")
