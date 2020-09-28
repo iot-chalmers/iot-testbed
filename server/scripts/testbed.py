@@ -8,6 +8,7 @@ import sys
 import getopt
 import getpass
 import time
+import signal
 import pwd
 import grp
 import subprocess
@@ -138,6 +139,18 @@ def file_append(path, str):
         print("Failed to append content to file '%s'" % path)
         print(e)
         do_quit(1)
+
+
+def getNextJobUser():
+    """Get next user name from user queueueueueueueueueueueueueueueueueueueueueueueueueueueueueue"""
+    content = file_read("/path/to/file")
+    names = content.split("\n")
+    user = names[0]
+    if user:
+        names = names[1:]
+    content = "\n".join(names)
+    return user
+
 
 # checks is any element of aset is in seq
 
@@ -440,6 +453,7 @@ def get_next_job_id():
     jobs_dir = os.path.join(HOME, "jobs")
     if os.path.isdir(jobs_dir):
         for f in sorted(os.listdir(jobs_dir)):
+            print("%s\n" % f)
             match = re.search(r'(\d+)_(.*)+', f)
             if match:
                 try:
@@ -658,7 +672,7 @@ def usage():
     print()
     print("Usage of create:")
     print(
-        "$testbed.py create [--copy-from PATH] [--name NAME] [--platform PLATFORM] [--hosts HOSTS] [--start]")
+        " $ testbed.py create [--copy-from PATH] [--name NAME] [--platform PLATFORM] [--hosts HOSTS] [--start]")
     print("--copy-from        'initialize job directory with content from PATH (if PATH is a directory) or with file PATH (otherwise)'")
     print("--name             'set the job name (no spaces)'")
     print("--platform         'set a platform for the job (must be a folder in %s)'" %
@@ -673,11 +687,11 @@ def usage():
     print("--forward-serial   'Forwards the serial line data into a TCP socket (tcp://raspi:50000)'")
     print()
     print("Usage of start:")
-    print("$testbed.py start [--job-id ID]")
+    print(" $ testbed.py start [--job-id ID]")
     print("--job-id           'the unique job id (obtained at creation). If not set, start next job.'")
     print()
     print("Usage of stop:")
-    print("$testbed.py stop [--force] [--no-download]")
+    print(" $ testbed.py stop [--force] [--no-download]")
     print("--force            'stop the job even if uninstall scripts fail'")
     print("--no-download      'do not download the logs before stopping'")
     print("--start-next       'start next job after stopping the current'")
@@ -686,9 +700,15 @@ def usage():
     print("These commands use no parameter.")
     print()
     print("Examples:")
-    print("$testbed.py create --copy-from /usr/testbed/examples/jn516x-hello-world --start     'create and start a JN516x hello-world job'")
-    print("$testbed.py stop                                                                    'stop the job and download the logs'")
+    print(" $ testbed.py create --copy-from /usr/testbed/examples/jn516x-hello-world --start     'create and start a JN516x hello-world job'")
+    print(" $ testbed.py stop                                                                    'stop the job and download the logs'")
     print()
+
+
+def signal_handler(sig, frame):
+    """Catpure CTRL + C to free lock if taken"""
+    print("Exiting gracefully!")
+    do_quit(1)
 
 
 if __name__ == "__main__":
@@ -697,6 +717,8 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         usage()
         sys.exit(1)
+
+    signal.signal(signal.SIGINT, signal_handler)
 
     # Try to fettch arguments
     try:
