@@ -46,10 +46,19 @@ TESTBED_PATH = "/usr/testbed/server"
 TESTBED_SCRIPTS_PATH = os.path.join(TESTBED_PATH, "scripts")
 LOCK_PATH = os.path.join(TESTBED_PATH, "lock")
 CURR_JOB_PATH = os.path.join(TESTBED_PATH, "curr_job")
-HOME = os.path.expanduser("~")
+CUR_USER_HOME = os.path.expanduser("~")
 USER = getpass.getuser()
 next_job_path = os.path.join(TESTBED_PATH, "next_job")
 next_job_path_user = os.path.join(TESTBED_PATH, "next_job_%s" % (USER))
+user_queue_file = os.path.join(TESTBED_PATH, "next_user")
+
+
+def get_user_home(user):
+    return os.path.join("/home/%s" % user)
+
+
+def get_next_job_path_user(user):
+    return os.path.join(TESTBED_PATH, "next_job_%s" % (user))
 
 
 def lock_is_taken():
@@ -128,6 +137,11 @@ def file_write(path, str):
         print(e)
         do_quit(1)
 
+def file_prepend(path, string):
+    content = file_read(path);
+    if content:
+        content = string + content
+        file_write(path, content)
 
 def file_append(path, str):
     file_set_permissions(path)
@@ -142,13 +156,24 @@ def file_append(path, str):
 
 def getNextJobUser():
     """Get next user name from user queueueueueueueueueueueueueueueueueueueueueueueueueueueueueue"""
-    content = file_read("/path/to/file")
-    names = content.split("\n")
-    user = names[0]
-    if user:
-        names = names[1:]
-    content = "\n".join(names)
-    return user
+    content = file_read(user_queue_file)
+    if content:
+        names = content.split("\n")
+        user = names[0]
+        if user:
+            names = names[1:]
+        content = ""
+        for name in names:
+            content = content + name + "\n"
+        file_write(user_queue_file, content)
+        return user
+    return None
+
+
+def queueNextUser(user):
+    """Insert a new user into the queueueueueueueueueueueueueueueueueueueueueueueueueueueueueue"""
+    print("USEEEEEEEEEEEEEER: %s" % user)
+    file_append(user_queue_file, "%s\n" % user)
 
 
 # checks is any element of aset is in seq
@@ -163,8 +188,9 @@ def contains_any(seq, aset):
 # get job directory from id
 
 
-def get_job_directory(job_id):
-    jobs_dir = os.path.join(HOME, "jobs")
+def get_job_directory(home, job_id):
+    jobs_dir = os.path.join(home, "jobs")
+    print("Jobs dir: %s" % home)
     if os.path.isdir(jobs_dir):
         for f in os.listdir(jobs_dir):
             if f.startswith("%d_" % (job_id)):
@@ -196,20 +222,20 @@ def load_curr_job_variables(need_curr_job, need_no_curr_job):
         print("Job %u is not yours (belongs to %s)!" %
               (curr_job, curr_job_owner))
         do_quit(1)
-    elif need_no_curr_job and curr_job:
-        print("There is a job currently active!")
-        do_quit(1)
+    # elif need_no_curr_job and curr_job:
+    #     print("There is a job currently active!")
+    #     do_quit(1)
 
 # load all variables related to a given job
 
 
-def load_job_variables(job_id):
+def load_job_variables(user, job_id):
     """Load job-directory, platform, host-path and job-duration for given job."""
     global job_dir, platform, hosts_path, duration
     # check if the job exists
-    job_dir = get_job_directory(job_id)
+    job_dir = get_job_directory(get_user_home(user), job_id)
     if job_dir == None:
-        print("Job %u not found!" % (job_id))
+        print("Job %u not found! %s" % (job_id, user))
         do_quit(1)
     # read what the platform for this job is
     platform = file_read(os.path.join(job_dir, "platform"))
@@ -286,14 +312,15 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
     file_write(next_job_path_user, "%u\n" % (job_id_user))
 
     # check if job id is already used
-    job_dir = get_job_directory(job_id_user)
+    job_dir = get_job_directory(CUR_USER_HOME, job_id_user)
     if job_dir:
         print("Job %d already exists! Delete %s before creating a new job." %
               (job_id_user, job_dir))
         do_quit(1)
 
     # create user job directory
-    job_dir = os.path.join(HOME, "jobs", "%u_%s" % (job_id_user, name))
+    job_dir = os.path.join(CUR_USER_HOME, "jobs", "%u_%s" %
+                           (job_id_user, name))
     # initialize job directory from copy_from command line parameter
     if copy_from:
         if os.path.isdir(copy_from):
@@ -394,7 +421,7 @@ def status():
 def list():
     """List all jobs."""
     all_jobs = {}
-    jobs_dir = os.path.join(HOME, "jobs")
+    jobs_dir = os.path.join(CUR_USER_HOME, "jobs")
     if os.path.isdir(jobs_dir):
         for f in os.listdir(jobs_dir):
             match = re.search(r'(\d+)_(.*)+', f)
@@ -449,7 +476,11 @@ def list():
 
 
 def get_next_job_id():
-    jobs_dir = os.path.join(HOME, "jobs")
+    global next_user
+    next_user = getNextJobUser()
+    print("NEXT_USER: %s" % next_user)
+    actual_user = next_user if next_user else USER
+    jobs_dir = os.path.join(get_user_home(actual_user), "jobs")
     if os.path.isdir(jobs_dir):
         for f in sorted(os.listdir(jobs_dir)):
             print("%s\n" % f)
@@ -469,16 +500,30 @@ def get_next_job_id():
 
 def start(job_id):
     """Start a job with a given job id"""
+    # if not job_id and job_id != 0:
+    job_id = get_next_job_id()
     if not job_id and job_id != 0:
-        job_id = get_next_job_id()
-        if not job_id and job_id != 0:
-            print("No next job found.")
-            return
+        print("No next job found.")
+        return
     load_curr_job_variables(False, True)
-    load_job_variables(job_id)
+    if curr_job or curr_job == 0:
+        load_job_variables(curr_job_owner, job_id)
+    else:
+        load_job_variables(USER, job_id)
     if os.path.exists(os.path.join(job_dir, ".started")):
         print("Job %d was started before!" % (job_id))
         do_quit(1)
+    # Add jobs to a q
+    if curr_job or curr_job == 0:
+        #     if next_user:
+        #         # somehow there is already a current job, even though the automation should have stopped it
+        #         queueNextUser(next_user)
+        #     else:
+        # User tries to start a job, while one job is already running
+        if next_user:
+            file_prepend(user_queue_file, next_user)
+        queueNextUser(USER)
+        do_quit(0)
     started = False
     attempt = 1
     while not started and attempt <= MAX_START_ATTEMPTS:
@@ -542,7 +587,7 @@ def download():
     """Download the logs of the current job."""
     load_curr_job_variables(True, False)
     # job_id = curr_job
-    load_job_variables(curr_job)
+    load_job_variables(curr_job_owner, curr_job)
     # download log file from all PI nodes
     remote_logs_dir = os.path.join(
         "/home/user/logs", os.path.basename(job_dir))
@@ -584,7 +629,7 @@ def stop(do_force):
     """Stop the current job on all Pis"""
     load_curr_job_variables(True, False)
     job_id = curr_job
-    load_job_variables(job_id)
+    load_job_variables(curr_job_owner, job_id)
     # cleanup the PI nodes
     # run platform stop script
     stop_script_path = os.path.join(TESTBED_SCRIPTS_PATH, platform, "stop.py")
