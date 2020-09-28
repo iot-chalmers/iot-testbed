@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Simon Duquennoy (simonduq@sics.se)
 
@@ -42,6 +42,7 @@ forward_serial = False
 
 MAX_START_ATTEMPTS = 3
 TESTBED_PATH = "/usr/testbed"
+# TESTBED_PATH = "/Users/louis/Documents/teaching/ds/iot-testbed/server"
 TESTBED_SCRIPTS_PATH = os.path.join(TESTBED_PATH, "scripts")
 LOCK_PATH = os.path.join(TESTBED_PATH, "lock")
 CURR_JOB_PATH = os.path.join(TESTBED_PATH, "curr_job")
@@ -95,10 +96,10 @@ def file_set_permissions(path):
             os.chown(path, uid, gid)
             if os.path.abspath(path) == CURR_JOB_PATH:
                 # the file 'curr_job' is only writeable by us
-                os.chmod(path, 640)
+                os.chmod(path, 0o640)
             else:
                 # other files under TESTBED_PATH are writeable by the group 'testbed'
-                os.chmod(path, 660)
+                os.chmod(path, 0o660)
         except Exception as e:
             print("Failed to set permissions for file '%s'" % path)
             print(e)
@@ -162,6 +163,7 @@ def get_job_directory(job_id):
 
 
 def load_curr_job_variables(need_curr_job, need_no_curr_job):
+    """Load current job variables like job-id, job-owner and job-date."""
     global curr_job, curr_job_owner, curr_job_date
     if not os.path.exists(CURR_JOB_PATH):
         curr_job = None
@@ -170,7 +172,8 @@ def load_curr_job_variables(need_curr_job, need_no_curr_job):
         try:
             curr_job = int(file_read(CURR_JOB_PATH))
         except Exception:
-            print("Content of '%s' is no valid number" % CURR_JOB_PATH)
+            print(
+                "Error loading job variables!\nContent of '%s' is no valid number" % CURR_JOB_PATH)
             do_quit(1)
         curr_job_owner = pwd.getpwuid(os.stat(CURR_JOB_PATH).st_uid).pw_name
         curr_job_date = os.stat(CURR_JOB_PATH).st_ctime
@@ -189,6 +192,7 @@ def load_curr_job_variables(need_curr_job, need_no_curr_job):
 
 
 def load_job_variables(job_id):
+    """Load job-directory, platform, host-path and job-duration for given job."""
     global job_dir, platform, hosts_path, duration
     # check if the job exists
     job_dir = get_job_directory(job_id)
@@ -207,6 +211,9 @@ def load_job_variables(job_id):
 
 
 def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_processing):
+    """Create a new job with given name, platform, hosts, source-directory to copy from. Start it, if 'do_start' is true, set a max duration,
+       set metadata and set a post-processing script.
+    """
     # if do_start is set, first check that there is no job active
     if do_start:
         load_curr_job_variables(False, True)
@@ -350,6 +357,7 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
 
 
 def status():
+    """Get the status of the testbed. Including information about running job."""
     load_curr_job_variables(False, False)
     if curr_job == None:
         print("No job currently active")
@@ -372,6 +380,7 @@ def status():
 
 
 def list():
+    """List all jobs."""
     all_jobs = {}
     jobs_dir = os.path.join(HOME, "jobs")
     if os.path.isdir(jobs_dir):
@@ -446,9 +455,10 @@ def get_next_job_id():
 
 
 def start(job_id):
-    if not job_id:
+    """Start a job with a given job id"""
+    if not job_id and job_id != 0:
         job_id = get_next_job_id()
-        if not job_id:
+        if not job_id and job_id != 0:
             print("No next job found.")
             return
     load_curr_job_variables(False, True)
@@ -497,6 +507,7 @@ def start(job_id):
         ts, USER, job_id, platform, job_dir)
     file_append(os.path.join(TESTBED_PATH, "history"), history_message + "\n")
     # schedule end of job if a duration is set
+    # NOTE: Here a max duration is applied and the current job is force stopped
     if duration:
         print("Scheduling end of job in %u min" % (duration))
         # schedule in duration + 1 to account for the currently begun minute
@@ -515,6 +526,7 @@ def rsync(src, dst):
 
 
 def download():
+    """Download the logs of the current job."""
     load_curr_job_variables(True, False)
     # job_id = curr_job
     load_job_variables(curr_job)
@@ -556,6 +568,7 @@ def download():
 
 
 def stop(do_force):
+    """Stop the current job on all Pis"""
     load_curr_job_variables(True, False)
     job_id = curr_job
     load_job_variables(job_id)
@@ -604,6 +617,7 @@ def stop(do_force):
 
 
 def reboot():
+    """Reboot all the Pis"""
     if force_reboot:
         d = 60
         load_curr_job_variables(False, True)
