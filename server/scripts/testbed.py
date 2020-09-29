@@ -45,12 +45,21 @@ MAX_START_ATTEMPTS = 3
 TESTBED_PATH = "/usr/testbed/server"
 TESTBED_SCRIPTS_PATH = os.path.join(TESTBED_PATH, "scripts")
 LOCK_PATH = os.path.join(TESTBED_PATH, "lock")
+HISTORY_FILE_PATH = os.path.join(TESTBED_PATH, "history")
 CURR_JOB_PATH = os.path.join(TESTBED_PATH, "curr_job")
 CUR_USER_HOME = os.path.expanduser("~")
 USER = getpass.getuser()
 next_job_path = os.path.join(TESTBED_PATH, "next_job")
 next_job_path_user = os.path.join(TESTBED_PATH, "next_job_%s" % (USER))
 user_queue_file = os.path.join(TESTBED_PATH, "next_user")
+
+
+def log(msg, toHistory=True, toConsole=True):
+    if toHistory:
+        file_append(HISTORY_FILE_PATH,
+                    msg + "\n")
+    if toConsole:
+        print(msg)
 
 
 def get_user_home(user):
@@ -137,6 +146,7 @@ def file_write(path, str):
         print(e)
         do_quit(1)
 
+
 def file_prepend(path, string):
     content = file_read(path)
     if content or content == "":
@@ -144,6 +154,7 @@ def file_prepend(path, string):
         content = string + content
         print("second content: %s" % content)
         file_write(path, content)
+
 
 def file_append(path, str):
     file_set_permissions(path)
@@ -158,9 +169,9 @@ def file_append(path, str):
 
 def getNextJobUser():
     """Get next user name from user queueueueueueueueueueueueueueueueueueueueueueueueueueueueueue"""
-    content = file_read(user_queue_file).rstrip()
+    content = file_read(user_queue_file)
     if content:
-        names = content.split("\n")
+        names = content.rstrip().split("\n")
         user = names[0]
         if user:
             names = names[1:]
@@ -242,7 +253,7 @@ def load_job_variables(user, job_id):
         print("Job %u not found! %s" % (job_id, user))
         do_quit(1)
     # read what the platform for this job is
-    platform = file_read(os.path.join(job_dir, "platform"))
+    platform = file_read(os.path.join(job_dir, "platform")).rstrip()
     # get path to the hosts file (list of PI nodes involved)
     hosts_path = os.path.join(job_dir, "hosts")
     # get path to the duration file
@@ -392,8 +403,7 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
     file_write(os.path.join(job_dir, ".created"), ts + "\n")  # write history
     history_message = "%s: %s created job %u, platform:%s, hosts:%s, copy-from:%s, directory:%s" % (
         ts, USER, job_id, platform, hosts, copy_from, job_dir)
-    file_append(os.path.join(TESTBED_PATH, "history"), history_message + "\n")
-    print(history_message)
+    log(history_message)
     file_write(next_job_path, "%u\n" % (job_id+1))
     if do_start:
         start(job_id)
@@ -499,7 +509,6 @@ def get_next_job_id():
                     do_quit(1)
                 job_dir = os.path.join(jobs_dir, f)
                 if not os.path.isfile(os.path.join(job_dir, ".started")):
-                    print("JOB ID: %d" % job_id)
                     return job_id
     return None
 
@@ -508,25 +517,28 @@ def start(job_id):
     """Start a job with a given job id"""
     # if not job_id and job_id != 0:
     job_id = get_next_job_id()
-    if not job_id and job_id != 0:
+    if job_id == None:
         print("No next job found.")
         return
     load_curr_job_variables(False, True)
     # if curr_job or curr_job == 0:
     #     load_job_variables(curr_job_owner, job_id)
     # else:
-    if not curr_job:
-        load_job_variables(USER, job_id)
+    # If there is no current job, load the job variables of the next job for the issuing user
+    user_to_load_variables_for = next_user if next_user else USER
+    if curr_job == None:
+        load_job_variables(user_to_load_variables_for, job_id)
+        log("Loaded job variables for user %s" % user_to_load_variables_for)
     if job_dir and os.path.exists(os.path.join(job_dir, ".started")):
         print("Job %d was started before!" % (job_id))
         do_quit(1)
     # Add jobs to a q
-    if curr_job or curr_job == 0:
+    if curr_job != None:
         # User tries to start a job, while one job is already running
-        print("%s %s" % (next_user, USER))
         if next_user:
             file_prepend(user_queue_file, "%s\n" % next_user)
         queueNextUser(USER)
+        log("User %s queued job %d." % (USER, job_id))
         do_quit(0)
     started = False
     attempt = 1
@@ -567,7 +579,7 @@ def start(job_id):
     # write history
     history_message = "%s: %s started job %u, platform %s, directory %s" % (
         ts, USER, job_id, platform, job_dir)
-    file_append(os.path.join(TESTBED_PATH, "history"), history_message + "\n")
+    log(history_message, toConsole=False)
     # schedule end of job if a duration is set
     # NOTE: Here a max duration is applied and the current job is force stopped
     if duration:
@@ -661,7 +673,7 @@ def stop(do_force):
     # write history
     history_message = "%s: %s stopped job %u, platform %s, directory %s" % (
         ts, USER, job_id, platform, job_dir)
-    file_append(os.path.join(TESTBED_PATH, "history"), history_message + "\n")
+    log(history_message, toConsole=False)
     # kill at jobs (jobs scheduled to stop in the future)
     print("Killing pending at jobs")
     os.system("for i in `atq | awk '{print $1}'`;do atrm $i;done")
@@ -691,17 +703,13 @@ def reboot():
         ts = timestamp()
         history_message = "%s: %s rebooted the PI nodes. Waiting %u s." % (
             ts, USER, d)
-        file_append(os.path.join(TESTBED_PATH, "history"),
-                    history_message + "\n")
-        print(history_message)
+        log(history_message)
         time.sleep(d)  # wait 60s to give time for reboot
     else:
         ts = timestamp()
         history_message = "%s: %s has disabled reboot, but there was a problem beforehand" % (
             ts, USER)
-        file_append(os.path.join(TESTBED_PATH, "history"),
-                    history_message + "\n")
-        print(history_message)
+        log(history_message)
 
 
 def usage():
@@ -771,7 +779,7 @@ if __name__ == "__main__":
         # Try to fettch arguments
         try:
             opts, args = getopt.getopt(sys.argv[2:], "", ["name=", "platform=", "hosts=", "copy-from=", "duration=", "job-id=", "start",
-                                                        "force", "no-download", "start-next", "metadata=", "post-processing=", "nested", "with-reboot", "forward-serial"])
+                                                          "force", "no-download", "start-next", "metadata=", "post-processing=", "nested", "with-reboot", "forward-serial"])
         except getopt.GetoptError as e:
             print(e)
             usage()
@@ -823,7 +831,7 @@ if __name__ == "__main__":
 
         if command == "create":
             create(name, platform, hosts, copy_from, do_start,
-                duration, metadata, post_processing)
+                   duration, metadata, post_processing)
         elif command == "status":
             status()
         elif command == "list":
@@ -839,6 +847,7 @@ if __name__ == "__main__":
         else:
             usage()
     except Exception as e:
+        print(e)
         do_quit(1)
 
     do_quit(0)
