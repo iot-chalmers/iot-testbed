@@ -118,7 +118,7 @@ def file_set_permissions(path):
 def file_read(path):
     if os.path.exists(path):
         try:
-            return open(path, "r").read().rstrip()
+            return open(path, "r").read()
         except Exception as e:
             print("Failed to read contents of file '%s'" % path)
             print(e)
@@ -138,9 +138,11 @@ def file_write(path, str):
         do_quit(1)
 
 def file_prepend(path, string):
-    content = file_read(path);
-    if content:
+    content = file_read(path)
+    if content or content == "":
+        print("first content: %s" % content)
         content = string + content
+        print("second content: %s" % content)
         file_write(path, content)
 
 def file_append(path, str):
@@ -156,7 +158,7 @@ def file_append(path, str):
 
 def getNextJobUser():
     """Get next user name from user queueueueueueueueueueueueueueueueueueueueueueueueueueueueueue"""
-    content = file_read(user_queue_file)
+    content = file_read(user_queue_file).rstrip()
     if content:
         names = content.split("\n")
         user = names[0]
@@ -215,13 +217,14 @@ def load_curr_job_variables(need_curr_job, need_no_curr_job):
             do_quit(1)
         curr_job_owner = pwd.getpwuid(os.stat(CURR_JOB_PATH).st_uid).pw_name
         curr_job_date = os.stat(CURR_JOB_PATH).st_ctime
-    if need_curr_job and not curr_job:
+    if need_curr_job and not curr_job and curr_job != 0:
         print("There is no active job!")
         do_quit(1)
     if need_curr_job and curr_job and USER != curr_job_owner:
         print("Job %u is not yours (belongs to %s)!" %
               (curr_job, curr_job_owner))
         do_quit(1)
+    # This is actually the case that we want, if we want to schedule a new job
     # elif need_no_curr_job and curr_job:
     #     print("There is a job currently active!")
     #     do_quit(1)
@@ -234,6 +237,7 @@ def load_job_variables(user, job_id):
     global job_dir, platform, hosts_path, duration
     # check if the job exists
     job_dir = get_job_directory(get_user_home(user), job_id)
+    print("LALELU: %s" % job_dir)
     if job_dir == None:
         print("Job %u not found! %s" % (job_id, user))
         do_quit(1)
@@ -295,32 +299,32 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
             duration = file_read(os.path.join(copy_from, "duration"))
 
     # read and update next job ID from max 'next_job' 'next_job?user' files
-    if os.path.exists(next_job_path_user):
-        job_id_user = int(file_read(next_job_path_user))
-    else:
-        job_id_user = 0
-        file_write(next_job_path_user, "%u\n" % (job_id_user))
+    # if os.path.exists(next_job_path_user):
+    #     job_id_user = int(file_read(next_job_path_user))
+    # else:
+    #     job_id_user = 0
+    #     file_write(next_job_path_user, "%u\n" % (job_id_user))
 
     if os.path.exists(next_job_path):
         job_id = int(file_read(next_job_path))
     else:
-        job_id = job_id_user
+        job_id = 0
         file_write(next_job_path, "%u\n" % (job_id))
 
-    job_id_user = max(job_id, job_id_user)
+    # job_id_user = max(job_id, job_id_user)
     # file_write(next_job_path, "%u\n"%(job_id))
-    file_write(next_job_path_user, "%u\n" % (job_id_user))
+    # file_write(next_job_path_user, "%u\n" % (job_id_user))
 
     # check if job id is already used
-    job_dir = get_job_directory(CUR_USER_HOME, job_id_user)
+    job_dir = get_job_directory(CUR_USER_HOME, job_id)
     if job_dir:
         print("Job %d already exists! Delete %s before creating a new job." %
-              (job_id_user, job_dir))
+              (job_id, job_dir))
         do_quit(1)
 
     # create user job directory
     job_dir = os.path.join(CUR_USER_HOME, "jobs", "%u_%s" %
-                           (job_id_user, name))
+                           (job_id, name))
     # initialize job directory from copy_from command line parameter
     if copy_from:
         if os.path.isdir(copy_from):
@@ -387,12 +391,12 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
     ts = timestamp()
     file_write(os.path.join(job_dir, ".created"), ts + "\n")  # write history
     history_message = "%s: %s created job %u, platform:%s, hosts:%s, copy-from:%s, directory:%s" % (
-        ts, USER, job_id_user, platform, hosts, copy_from, job_dir)
+        ts, USER, job_id, platform, hosts, copy_from, job_dir)
     file_append(os.path.join(TESTBED_PATH, "history"), history_message + "\n")
     print(history_message)
+    file_write(next_job_path, "%u\n" % (job_id+1))
     if do_start:
-        start(job_id_user)
-    file_write(next_job_path_user, "%u\n" % (job_id_user+1))
+        start(job_id)
 
 
 def status():
@@ -480,6 +484,7 @@ def get_next_job_id():
     next_user = getNextJobUser()
     print("NEXT_USER: %s" % next_user)
     actual_user = next_user if next_user else USER
+    print("ACTUAL USER: %s" % actual_user)
     jobs_dir = os.path.join(get_user_home(actual_user), "jobs")
     if os.path.isdir(jobs_dir):
         for f in sorted(os.listdir(jobs_dir)):
@@ -494,6 +499,7 @@ def get_next_job_id():
                     do_quit(1)
                 job_dir = os.path.join(jobs_dir, f)
                 if not os.path.isfile(os.path.join(job_dir, ".started")):
+                    print("JOB ID: %d" % job_id)
                     return job_id
     return None
 
@@ -506,22 +512,20 @@ def start(job_id):
         print("No next job found.")
         return
     load_curr_job_variables(False, True)
-    if curr_job or curr_job == 0:
-        load_job_variables(curr_job_owner, job_id)
-    else:
+    # if curr_job or curr_job == 0:
+    #     load_job_variables(curr_job_owner, job_id)
+    # else:
+    if not curr_job:
         load_job_variables(USER, job_id)
-    if os.path.exists(os.path.join(job_dir, ".started")):
+    if job_dir and os.path.exists(os.path.join(job_dir, ".started")):
         print("Job %d was started before!" % (job_id))
         do_quit(1)
     # Add jobs to a q
     if curr_job or curr_job == 0:
-        #     if next_user:
-        #         # somehow there is already a current job, even though the automation should have stopped it
-        #         queueNextUser(next_user)
-        #     else:
         # User tries to start a job, while one job is already running
+        print("%s %s" % (next_user, USER))
         if next_user:
-            file_prepend(user_queue_file, next_user)
+            file_prepend(user_queue_file, "%s\n" % next_user)
         queueNextUser(USER)
         do_quit(0)
     started = False
@@ -575,7 +579,7 @@ def start(job_id):
                   (py_testbed_script_path, duration + 1))
     print(history_message)
     # success, set next job id
-    file_write(next_job_path, "%u\n" % (job_id+1))
+    # file_write(next_job_path, "%u\n" % (job_id+1))
 
 
 def rsync(src, dst):
@@ -756,83 +760,85 @@ def signal_handler(sig, frame):
 
 
 if __name__ == "__main__":
-
-    # Check, if enough arguments are given
-    if len(sys.argv) < 2:
-        usage()
-        sys.exit(1)
-
-    signal.signal(signal.SIGINT, signal_handler)
-
-    # Try to fettch arguments
     try:
-        opts, args = getopt.getopt(sys.argv[2:], "", ["name=", "platform=", "hosts=", "copy-from=", "duration=", "job-id=", "start",
-                                                      "force", "no-download", "start-next", "metadata=", "post-processing=", "nested", "with-reboot", "forward-serial"])
-    except getopt.GetoptError as e:
-        print(e)
-        usage()
-        sys.exit(1)
+        # Check, if enough arguments are given
+        if len(sys.argv) < 2:
+            usage()
+            sys.exit(1)
 
-    command = sys.argv[1]
+        signal.signal(signal.SIGINT, signal_handler)
 
-    for opt, value in opts:
-        if opt == "--name":
-            name = value
-        elif opt == "--platform":
-            platform = value
-        elif opt == "--hosts":
-            hosts = os.path.normpath(value)
-        elif opt == "--copy-from":
-            copy_from = os.path.normpath(value)
-        elif opt == "--job-id":
-            try:
-                job_id = int(value)
-            except Exception as e:
-                print("Error: --job-id expects an number as argument")
-                sys.exit(1)
-        elif opt == "--duration":
-            duration = value
-        elif opt == "--start":
-            do_start = True
-        elif opt == "--force":
-            do_force = True
-        elif opt == "--no-download":
-            do_no_download = True
-        elif opt == "--start-next":
-            do_start_next = True
-        elif opt == '--post-processing':
-            post_processing = value
-        elif opt == "--metadata":
-            metadata = value
-        elif opt == "--nested":
-            is_nested = True
-        elif opt == "--with-reboot":
-            force_reboot = True
-        elif opt == "--forward-serial":
-            forward_serial = True
+        # Try to fettch arguments
+        try:
+            opts, args = getopt.getopt(sys.argv[2:], "", ["name=", "platform=", "hosts=", "copy-from=", "duration=", "job-id=", "start",
+                                                        "force", "no-download", "start-next", "metadata=", "post-processing=", "nested", "with-reboot", "forward-serial"])
+        except getopt.GetoptError as e:
+            print(e)
+            usage()
+            sys.exit(1)
 
-    if not is_nested and lock_is_taken():
-        print("Lock is taken. Try a gain in a few seconds/minutes.")
-        sys.exit(1)
-    else:
-        lock_aquire()
+        command = sys.argv[1]
 
-    if command == "create":
-        create(name, platform, hosts, copy_from, do_start,
-               duration, metadata, post_processing)
-    elif command == "status":
-        status()
-    elif command == "list":
-        list()
-    elif command == "start":
-        start(job_id)
-    elif command == "download":
-        download()
-    elif command == "stop":
-        stop(do_force)
-    elif command == "reboot":
-        reboot()
-    else:
-        usage()
+        for opt, value in opts:
+            if opt == "--name":
+                name = value
+            elif opt == "--platform":
+                platform = value
+            elif opt == "--hosts":
+                hosts = os.path.normpath(value)
+            elif opt == "--copy-from":
+                copy_from = os.path.normpath(value)
+            elif opt == "--job-id":
+                try:
+                    job_id = int(value)
+                except Exception as e:
+                    print("Error: --job-id expects an number as argument")
+                    sys.exit(1)
+            elif opt == "--duration":
+                duration = value
+            elif opt == "--start":
+                do_start = True
+            elif opt == "--force":
+                do_force = True
+            elif opt == "--no-download":
+                do_no_download = True
+            elif opt == "--start-next":
+                do_start_next = True
+            elif opt == '--post-processing':
+                post_processing = value
+            elif opt == "--metadata":
+                metadata = value
+            elif opt == "--nested":
+                is_nested = True
+            elif opt == "--with-reboot":
+                force_reboot = True
+            elif opt == "--forward-serial":
+                forward_serial = True
+
+        if not is_nested and lock_is_taken():
+            print("Lock is taken. Try a gain in a few seconds/minutes.")
+            sys.exit(1)
+        else:
+            lock_aquire()
+
+        if command == "create":
+            create(name, platform, hosts, copy_from, do_start,
+                duration, metadata, post_processing)
+        elif command == "status":
+            status()
+        elif command == "list":
+            list()
+        elif command == "start":
+            start(job_id)
+        elif command == "download":
+            download()
+        elif command == "stop":
+            stop(do_force)
+        elif command == "reboot":
+            reboot()
+        else:
+            usage()
+    except Exception as e:
+        do_quit(1)
 
     do_quit(0)
