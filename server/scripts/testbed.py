@@ -150,9 +150,7 @@ def file_write(path, str):
 def file_prepend(path, string):
     content = file_read(path)
     if content or content == "":
-        print("first content: %s" % content)
         content = string + content
-        print("second content: %s" % content)
         file_write(path, content)
 
 
@@ -185,7 +183,6 @@ def getNextJobUser():
 
 def queueNextUser(user):
     """Insert a new user into the queueueueueueueueueueueueueueueueueueueueueueueueueueueueueue"""
-    print("USEEEEEEEEEEEEEER: %s" % user)
     file_append(user_queue_file, "%s\n" % user)
 
 
@@ -203,7 +200,6 @@ def contains_any(seq, aset):
 
 def get_job_directory(home, job_id):
     jobs_dir = os.path.join(home, "jobs")
-    print("Jobs dir: %s" % home)
     if os.path.isdir(jobs_dir):
         for f in os.listdir(jobs_dir):
             if f.startswith("%d_" % (job_id)):
@@ -235,7 +231,7 @@ def load_curr_job_variables(need_curr_job, need_no_curr_job):
         print("Job %u is not yours (belongs to %s)!" %
               (curr_job, curr_job_owner))
         do_quit(1)
-    # This is actually the case that we want, if we want to schedule a new job
+    # NOTE: This is actually the case that we want, if we want to schedule a new job
     # elif need_no_curr_job and curr_job:
     #     print("There is a job currently active!")
     #     do_quit(1)
@@ -248,7 +244,6 @@ def load_job_variables(user, job_id):
     global job_dir, platform, hosts_path, duration
     # check if the job exists
     job_dir = get_job_directory(get_user_home(user), job_id)
-    print("LALELU: %s" % job_dir)
     if job_dir == None:
         print("Job %u not found! %s" % (job_id, user))
         do_quit(1)
@@ -490,11 +485,10 @@ def list():
 
 
 def get_next_job_id():
+    """Get the next job id, depending on the fact, whether there is a user in the queue or not"""
     global next_user
     next_user = getNextJobUser()
-    print("NEXT_USER: %s" % next_user)
     actual_user = next_user if next_user else USER
-    print("ACTUAL USER: %s" % actual_user)
     jobs_dir = os.path.join(get_user_home(actual_user), "jobs")
     if os.path.isdir(jobs_dir):
         for f in sorted(os.listdir(jobs_dir)):
