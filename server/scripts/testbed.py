@@ -52,9 +52,12 @@ USER = getpass.getuser()
 next_job_path = os.path.join(TESTBED_PATH, "next_job")
 next_job_path_user = os.path.join(TESTBED_PATH, "next_job_%s" % (USER))
 user_queue_file = os.path.join(TESTBED_PATH, "next_user")
+testbed_info_file = os.path.join(TESTBED_PATH, "testbed_info")
+GENERAL_JOB_DIR = os.path.join(TESTBED_PATH, "jobs")
 
 
 def log(msg, toHistory=True, toConsole=True):
+    """Log messages to console and to history file"""
     if toHistory:
         file_append(HISTORY_FILE_PATH,
                     msg + "\n")
@@ -63,18 +66,22 @@ def log(msg, toHistory=True, toConsole=True):
 
 
 def get_user_home(user):
+    """Get the home directory for a user"""
     return os.path.join("/home/%s" % user)
 
 
 def get_next_job_path_user(user):
+    """@Deprecated: Will be removed later"""
     return os.path.join(TESTBED_PATH, "next_job_%s" % (user))
 
 
 def lock_is_taken():
+    """Check, if the lock is currently taken"""
     return os.path.exists(LOCK_PATH)
 
 
 def lock_aquire():
+    """Get the lock"""
     if not is_nested:
         try:
             open(LOCK_PATH, 'a').close()
@@ -103,6 +110,18 @@ def timestamp():
     return datetime.datetime.now(tz=pytz.timezone('Europe/Stockholm')).isoformat()
 
 
+def file_set_group_permission(path):
+    if os.path.exists(path):
+        try:
+            gid = grp.getgrnam("testbed").gr_gid
+            uid = pwd.getpwnam(USER).pw_uid
+            os.chown(path=path, uid=uid, gid=gid)
+            # os.chmod(path, 0o660)
+        except Exception as e:
+            print("Failed to set permissions for file '%s'" % path)
+            print(e)
+            do_quit(1)
+
 def file_set_permissions(path):
     # whenever writing to a file in TESTBED_PATH for the first time, set group as "testbed"
     if path.startswith(TESTBED_PATH) and not os.path.exists(path):
@@ -114,7 +133,7 @@ def file_set_permissions(path):
             os.chown(path, uid, gid)
             if os.path.abspath(path) == CURR_JOB_PATH:
                 # the file 'curr_job' is only writeable by us
-                os.chmod(path, 0o640)
+                os.chmod(path, 0o660)
             else:
                 # other files under TESTBED_PATH are writeable by the group 'testbed'
                 os.chmod(path, 0o660)
@@ -198,8 +217,9 @@ def contains_any(seq, aset):
 # get job directory from id
 
 
-def get_job_directory(home, job_id):
-    jobs_dir = os.path.join(home, "jobs")
+def get_job_directory(job_id):
+    # jobs_dir = os.path.join(home, "jobs")
+    jobs_dir = GENERAL_JOB_DIR
     if os.path.isdir(jobs_dir):
         for f in os.listdir(jobs_dir):
             if f.startswith("%d_" % (job_id)):
@@ -239,13 +259,13 @@ def load_curr_job_variables(need_curr_job, need_no_curr_job):
 # load all variables related to a given job
 
 
-def load_job_variables(user, job_id):
+def load_job_variables(job_id):
     """Load job-directory, platform, host-path and job-duration for given job."""
     global job_dir, platform, hosts_path, duration
     # check if the job exists
-    job_dir = get_job_directory(get_user_home(user), job_id)
+    job_dir = get_job_directory(job_id)
     if job_dir == None:
-        print("Job %u not found! %s" % (job_id, user))
+        print("Job %u not found!" % (job_id))
         do_quit(1)
     # read what the platform for this job is
     platform = file_read(os.path.join(job_dir, "platform")).rstrip()
@@ -322,14 +342,14 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
     # file_write(next_job_path_user, "%u\n" % (job_id_user))
 
     # check if job id is already used
-    job_dir = get_job_directory(CUR_USER_HOME, job_id)
+    job_dir = get_job_directory(job_id)
     if job_dir:
         print("Job %d already exists! Delete %s before creating a new job." %
               (job_id, job_dir))
         do_quit(1)
 
     # create user job directory
-    job_dir = os.path.join(CUR_USER_HOME, "jobs", "%u_%s" %
+    job_dir = os.path.join(GENERAL_JOB_DIR, "%u_%s" %
                            (job_id, name))
     # initialize job directory from copy_from command line parameter
     if copy_from:
@@ -359,6 +379,8 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
             print("Failed to create directory %s" % job_dir)
             print(e)
             do_quit(1)
+    # set file permissions
+    file_set_group_permission(job_dir)
     # copy metadata file, if any
     if metadata:
         dest = os.path.join(
@@ -430,7 +452,7 @@ def status():
 def list():
     """List all jobs."""
     all_jobs = {}
-    jobs_dir = os.path.join(CUR_USER_HOME, "jobs")
+    jobs_dir = os.path.join(GENERAL_JOB_DIR)
     if os.path.isdir(jobs_dir):
         for f in os.listdir(jobs_dir):
             match = re.search(r'(\d+)_(.*)+', f)
@@ -489,7 +511,7 @@ def get_next_job_id():
     global next_user
     next_user = getNextJobUser()
     actual_user = next_user if next_user else USER
-    jobs_dir = os.path.join(get_user_home(actual_user), "jobs")
+    jobs_dir = GENERAL_JOB_DIR
     if os.path.isdir(jobs_dir):
         for f in sorted(os.listdir(jobs_dir)):
             print("%s\n" % f)
@@ -521,7 +543,7 @@ def start(job_id):
     # If there is no current job, load the job variables of the next job for the issuing user
     user_to_load_variables_for = next_user if next_user else USER
     if curr_job == None:
-        load_job_variables(user_to_load_variables_for, job_id)
+        load_job_variables(job_id)
         log("Loaded job variables for user %s" % user_to_load_variables_for)
     if job_dir and os.path.exists(os.path.join(job_dir, ".started")):
         print("Job %d was started before!" % (job_id))
@@ -597,7 +619,7 @@ def download():
     """Download the logs of the current job."""
     load_curr_job_variables(True, False)
     # job_id = curr_job
-    load_job_variables(curr_job_owner, curr_job)
+    load_job_variables(curr_job)
     # download log file from all PI nodes
     remote_logs_dir = os.path.join(
         "/home/user/logs", os.path.basename(job_dir))
@@ -617,6 +639,7 @@ def download():
                 print("Failed to create directory '%s'" % host_log_path)
                 print(e)
                 do_quit(1)
+        file_set_group_permission(host_log_path)
         curr_remote_logs_uri = "user@%s:" % (host) + \
             os.path.join(remote_logs_dir, "*")
         p = multiprocessing.Process(target=rsync, args=(
@@ -639,7 +662,7 @@ def stop(do_force):
     """Stop the current job on all Pis"""
     load_curr_job_variables(True, False)
     job_id = curr_job
-    load_job_variables(curr_job_owner, job_id)
+    load_job_variables(job_id)
     # cleanup the PI nodes
     # run platform stop script
     stop_script_path = os.path.join(TESTBED_SCRIPTS_PATH, platform, "stop.py")
