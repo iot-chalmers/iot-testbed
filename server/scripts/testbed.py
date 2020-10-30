@@ -66,6 +66,7 @@ def log(msg, toHistory=True, toConsole=True):
     if toConsole:
         print1(msg)
 
+# Work-Around to get everything logged
 def print(msg=None):
     if msg:
         log(msg)
@@ -659,6 +660,7 @@ def download():
         rsync_processes.append(p)
     for p in rsync_processes:
         p.join()
+    # Set permissions for the logs dir
     file_set_group_permission(logs_dir)
     # run platform download script
     download_script_path = os.path.join(
