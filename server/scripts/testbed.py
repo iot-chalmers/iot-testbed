@@ -55,7 +55,6 @@ next_job_path_user = os.path.join(TESTBED_PATH, "next_job_%s" % (USER))
 user_queue_file = os.path.join(TESTBED_PATH, "next_user")
 testbed_info_file = os.path.join(TESTBED_PATH, "testbed_info")
 GENERAL_JOB_DIR = os.path.join(TESTBED_PATH, "jobs")
-print1 = print
 
 
 def log(msg, toHistory=True, toConsole=True):
@@ -64,12 +63,8 @@ def log(msg, toHistory=True, toConsole=True):
         file_append(HISTORY_FILE_PATH,
                     msg + "\n")
     if toConsole:
-        print1(msg)
+        print(msg)
 
-# Work-Around to get everything logged
-def print(msg=None):
-    if msg:
-        log(msg)
 
 def get_user_home(user):
     """Get the home directory for a user"""
@@ -128,6 +123,7 @@ def file_set_group_permission(path):
             print(e)
             do_quit(1)
 
+
 def file_set_permissions(path):
     # whenever writing to a file in TESTBED_PATH for the first time, set group as "testbed"
     if path.startswith(TESTBED_PATH) and not os.path.exists(path):
@@ -137,11 +133,6 @@ def file_set_permissions(path):
             uid = pwd.getpwnam(USER).pw_uid
             gid = grp.getgrnam("testbed").gr_gid
             os.chown(path, uid, gid)
-            # if os.path.abspath(path) == CURR_JOB_PATH:
-            #     # the file 'curr_job' is only writeable by us
-            #     os.chmod(path, 0o660)
-            # else:
-                # other files under TESTBED_PATH are writeable by the group 'testbed'
             os.chmod(path, 0o660)
         except Exception as e:
             print("Failed to set permissions for file '%s'" % path)
@@ -191,7 +182,7 @@ def file_append(path, str):
 
 
 def getNextJobUser():
-    """Get next user name from user queueueueueueueueueueueueueueueueueueueueueueueueueueueueueue"""
+    """Get next user name from user queue"""
     content = file_read(user_queue_file)
     if content:
         names = content.rstrip().split("\n")
@@ -207,7 +198,7 @@ def getNextJobUser():
 
 
 def queueNextUser(user):
-    """Insert a new user into the queueueueueueueueueueueueueueueueueueueueueueueueueueueueueue"""
+    """Insert a new user into the queue"""
     file_append(user_queue_file, "%s\n" % user)
 
 
@@ -224,8 +215,6 @@ def contains_any(seq, aset):
 
 
 def get_job_directory(user, job_id):
-    # jobs_dir = os.path.join(home, "jobs")
-    # jobs_dir = GENERAL_JOB_DIR
     jobs_dir = os.path.join(GENERAL_JOB_DIR, user)
     if os.path.isdir(jobs_dir):
         for f in os.listdir(jobs_dir):
@@ -254,15 +243,6 @@ def load_curr_job_variables(need_curr_job, need_no_curr_job):
     if need_curr_job and not curr_job and curr_job != 0:
         print("There is no active job!")
         do_quit(1)
-    # NOTE: Nasty nasty things, but maybe we need them like that
-    # if need_curr_job and curr_job and USER != curr_job_owner:
-    #     print("Job %u is not yours (belongs to %s)!" %
-    #           (curr_job, curr_job_owner))
-    #     do_quit(1)
-    # NOTE: This is actually the case that we want, if we want to schedule a new job
-    # elif need_no_curr_job and curr_job:
-    #     print("There is a job currently active!")
-    #     do_quit(1)
 
 # load all variables related to a given job
 
@@ -332,22 +312,11 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
         if copy_from and os.path.isfile(os.path.join(copy_from, "duration")):
             duration = file_read(os.path.join(copy_from, "duration"))
 
-    # read and update next job ID from max 'next_job' 'next_job?user' files
-    # if os.path.exists(next_job_path_user):
-    #     job_id_user = int(file_read(next_job_path_user))
-    # else:
-    #     job_id_user = 0
-    #     file_write(next_job_path_user, "%u\n" % (job_id_user))
-
     if os.path.exists(next_job_path):
         job_id = int(file_read(next_job_path))
     else:
         job_id = 0
         file_write(next_job_path, "%u\n" % (job_id))
-
-    # job_id_user = max(job_id, job_id_user)
-    # file_write(next_job_path, "%u\n"%(job_id))
-    # file_write(next_job_path_user, "%u\n" % (job_id_user))
 
     # check if job id is already used
     job_dir = get_job_directory(USER, job_id)
@@ -525,7 +494,6 @@ def get_next_job_id():
     jobs_dir = os.path.join(GENERAL_JOB_DIR, actual_user)
     if os.path.isdir(jobs_dir):
         for f in sorted(os.listdir(jobs_dir)):
-            print("%s\n" % f)
             match = re.search(r'(\d+)_(.*)+', f)
             if match:
                 try:
@@ -542,30 +510,32 @@ def get_next_job_id():
 
 def start(job_id):
     """Start a job with a given job id"""
-    # if not job_id and job_id != 0:
     job_id = get_next_job_id()
+
+    # get the next job id and skip entries of users with no pending (unstarted) jobs
+    while job_id == None and next_user != None:
+        job_id = get_next_job_id()
+
     if job_id == None:
-        print("No next job found.")
+        print("There is no next job!")
         return
+
     load_curr_job_variables(False, True)
-    # if curr_job or curr_job == 0:
-    #     load_job_variables(curr_job_owner, job_id)
-    # else:
     # If there is no current job, load the job variables of the next job for the issuing user
     user_to_load_variables_for = next_user if next_user else USER
     if curr_job == None:
         load_job_variables(user_to_load_variables_for, job_id)
-        log("Loaded job variables for user %s" % user_to_load_variables_for)
     if job_dir and os.path.exists(os.path.join(job_dir, ".started")):
         print("Job %d was started before!" % (job_id))
         do_quit(1)
-    # Add jobs to a q
+    # Add jobs to a queue
     if curr_job != None:
         # User tries to start a job, while one job is already running
         if next_user:
             file_prepend(user_queue_file, "%s\n" % next_user)
         queueNextUser(USER)
-        log("User %s queued job %d." % (USER, job_id))
+        ts = timestamp()
+        log("%s: %s queued a job." % (ts, USER))
         do_quit(0)
     started = False
     attempt = 1
@@ -606,10 +576,9 @@ def start(job_id):
     file_write(os.path.join(job_dir, ".started"), ts + "\n")
     # write history
     history_message = "%s: %s started job %u, platform %s, directory %s" % (
-        ts, USER, job_id, platform, job_dir)
+        ts, user_to_load_variables_for, job_id, platform, job_dir)
     log(history_message, toConsole=False)
     # schedule end of job if a duration is set
-    # NOTE: Here a max duration is applied and the current job is force stopped
     if duration:
         print("Scheduling end of job in %u min" % (duration))
         # schedule in duration + 1 to account for the currently begun minute
@@ -618,8 +587,6 @@ def start(job_id):
         os.system("echo '%s stop --force --start-next'  | at -q t now + %u min" %
                   (py_testbed_script_path, duration + 1))
     print(history_message)
-    # success, set next job id
-    # file_write(next_job_path, "%u\n" % (job_id+1))
 
 
 def rsync(src, dst):
@@ -698,13 +665,14 @@ def stop(do_force):
         os.remove(CURR_JOB_PATH)
         os.remove(CURR_JOB_OWNER_PATH)
     except Exception:
-        print("Failed to remove '%s' or '%s'" % (CURR_JOB_PATH, CURR_JOB_OWNER_PATH))
+        print("Failed to remove '%s' or '%s'" %
+              (CURR_JOB_PATH, CURR_JOB_OWNER_PATH))
     # write stop timestamp
     ts = timestamp()
     file_write(os.path.join(job_dir, ".stopped"), ts + "\n")
     # write history
     history_message = "%s: %s stopped job %u, platform %s, directory %s" % (
-        ts, USER, job_id, platform, job_dir)
+        ts, curr_job_owner, job_id, platform, job_dir)
     log(history_message, toConsole=False)
     # kill at jobs (jobs scheduled to stop in the future)
     print("Killing pending at jobs")
