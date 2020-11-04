@@ -262,7 +262,7 @@ def load_job_variables(user, job_id):
     # get path to the duration file
     # duration_path = os.path.join(job_dir, "duration")
     duration = file_read(os.path.join(job_dir, "duration"))
-    if duration:
+    if duration != None:
         duration = int(duration)
 
 
@@ -308,7 +308,7 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
         do_quit(1)
 
     # if duration is not set, take it from copy-from
-    if not duration:
+    if duration == None:
         if copy_from and os.path.isfile(os.path.join(copy_from, "duration")):
             duration = file_read(os.path.join(copy_from, "duration"))
 
@@ -392,7 +392,7 @@ def create(name, platform, hosts, copy_from, do_start, duration, metadata, post_
         do_quit(1)
     # create platform file in job directory
     file_write(os.path.join(job_dir, "platform"), platform + "\n")
-    if duration:
+    if duration != None:
         # create duration file in job directory
         file_write(os.path.join(job_dir, "duration"), duration + "\n")
     # write creation timestamp
@@ -579,7 +579,7 @@ def start(job_id):
         ts, user_to_load_variables_for, job_id, platform, job_dir)
     log(history_message, toConsole=False)
     # schedule end of job if a duration is set
-    if duration:
+    if duration != None:
         print("Scheduling end of job in %u min" % (duration))
         # schedule in duration + 1 to account for the currently begun minute
         py_testbed_script_path = os.path.join(
