@@ -1172,7 +1172,7 @@ class BootStrapLoader(LowLevel):
         ans = self.bslTxRx(self.BSL_TXVERSION, 0) #Command: receive version info
         #the following values are in big endian style!!!
         family_type, bsl_version = struct.unpack(">H8xH4x", ans[:-2]) #cut away checksum and extract data
-        print "Device Type: 0x%04x\nBSL version: 0x%04x\n" % (family_type, bsl_version)
+        print("Device Type: 0x%04x\nBSL version: 0x%04x\n" % (family_type, bsl_version))
 
 
 def usage():
@@ -1601,7 +1601,7 @@ def main():
         if hexoutput:                               #depending on output format
             m = 0
             while m < len(data):                    #print a hex display
-                print hexify(startaddr+m, map(ord,data[m:m+16]))
+                print(hexify(startaddr+m, map(ord,data[m:m+16])))
                 m = m + 16
         else:
             sys.stdout.write(data)                  #binary output w/o newline!
