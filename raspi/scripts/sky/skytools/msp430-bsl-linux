@@ -935,7 +935,7 @@ class BootStrapLoader(LowLevel):
         else:
             #sanity check of password
             if len(passwd) != 32:
-                raise ValueError, "password has wrong length (%d)\n" % len(passwd)
+                raise ValueError("password has wrong length (%d)\n" % len(passwd))
             sys.stderr.write('Transmit password ...\n')
             sys.stderr.flush()
         #send the password
@@ -1097,7 +1097,7 @@ class BootStrapLoader(LowLevel):
         if self.data is not None:
             self.programData(self.data, self.ACTION_ERASE_CHECK)
         else:
-            raise BSLException, "cannot do erase check against data with not knowing the actual data"
+            raise BSLException("cannot do erase check against data with not knowing the actual data")
 
     def actionProgram(self):
         """program data into flash memory."""
@@ -1108,7 +1108,7 @@ class BootStrapLoader(LowLevel):
             sys.stderr.write("%i bytes programmed.\n" % self.byteCtr)
             sys.stderr.flush()
         else:
-            raise BSLException, "programming without data not possible"
+            raise BSLException("programming without data not possible")
 
     def actionVerify(self):
         """Verify programmed data"""
@@ -1117,7 +1117,7 @@ class BootStrapLoader(LowLevel):
             sys.stderr.flush()
             self.programData(self.data, self.ACTION_VERIFY)
         else:
-            raise BSLException, "verify without data not possible"
+            raise BSLException("verify without data not possible")
 
     def actionReset(self):
         """perform a reset, start user programm"""
@@ -1152,11 +1152,11 @@ class BootStrapLoader(LowLevel):
         try:
             baudconfigs = self.bauratetable[self.cpu]
         except KeyError:
-            raise ValueError, "unknown CPU type %s, can't switch baudrate" % self.cpu
+            raise ValueError("unknown CPU type %s, can't switch baudrate" % self.cpu)
         try:
             a,l = baudconfigs[baudrate]
         except KeyError:
-            raise ValueError, "baudrate not valid. valid values are %r" % baudconfigs.keys()
+            raise ValueError("baudrate not valid. valid values are %r" % baudconfigs.keys())
         
         sys.stderr.write("Changing baudrate to %d ...\n" % baudrate)
         sys.stderr.flush()
