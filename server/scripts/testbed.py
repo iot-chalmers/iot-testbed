@@ -470,8 +470,7 @@ def list():
                     stopped = stopped.split('.')[0]
                 logs_path = os.path.join(job_dir, "logs")
                 if os.path.isdir(logs_path):
-                    n_log_files = len(
-                        filter(lambda x: x.startswith("pi"), os.listdir(logs_path)))
+                    n_log_files = sum(1 for _ in filter(lambda x: x.startswith("raspi"), os.listdir(logs_path)))
                 else:
                     n_log_files = 0
                 all_jobs[job_id] = {"dir": f, "platform": platform, "duration": duration,
