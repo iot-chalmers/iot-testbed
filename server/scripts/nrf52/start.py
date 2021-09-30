@@ -40,11 +40,15 @@ if __name__=="__main__":
   # Copy firmware to the nodes
   if pscp(hosts_path, firmware_path, REMOTE_FIRMWARE_PATH, "Copying nrf52 firmware to the PI nodes") != 0:
     sys.exit(3)
-  # Program the nodes
-  if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "install.sh"), REMOTE_FIRMWARE_PATH), "Installing nrf52 firmware") != 0:
-    sys.exit(4)
-  # Start serialdump
+  # Program the nodes and start serialdump
   remote_log_dir = os.path.join(REMOTE_LOGS_PATH, os.path.basename(job_dir), "log.txt")
-  if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "serialdump.sh"), remote_log_dir), "Starting serialdump") != 0:
-    sys.exit(5)
+  if pssh(hosts_path, "%s %s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "install-serialdump.sh"), REMOTE_FIRMWARE_PATH, remote_log_dir), "Installing nrf52 firmware and starting serialdump") != 0:
+    sys.exit(4)
+  # # Program the nodes
+  # if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "install.sh"), REMOTE_FIRMWARE_PATH), "Installing nrf52 firmware") != 0:
+  #   sys.exit(4)
+  # # Start serialdump
+  # remote_log_dir = os.path.join(REMOTE_LOGS_PATH, os.path.basename(job_dir), "log.txt")
+  # if pssh(hosts_path, "%s %s"%(os.path.join(REMOTE_JN_SCRIPTS_PATH, "serialdump.sh"), remote_log_dir), "Starting serialdump") != 0:
+  #   sys.exit(5)
 
