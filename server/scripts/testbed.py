@@ -42,7 +42,7 @@ force_reboot = False
 forward_serial = False
 
 MAX_START_ATTEMPTS = 3
-TESTBED_PATH = "/usr/testbed/server"
+TESTBED_PATH = "/usr/testbed"
 TESTBED_SCRIPTS_PATH = os.path.join(TESTBED_PATH, "scripts")
 LOCK_PATH = os.path.join(TESTBED_PATH, "lock")
 HISTORY_FILE_PATH = os.path.join(TESTBED_PATH, "history")
