@@ -421,7 +421,7 @@ def status():
         out, _err = process.communicate()
         curr_date = out.rstrip()
         # check current date on all nodes
-        if pssh(os.path.join(TESTBED_SCRIPTS_PATH, "all-hosts"), "check-date.sh %s" % (curr_date), "Testing connectivity with all nodes", merge_path=True, inline=True) != 0:
+        if pssh(os.path.join(TESTBED_SCRIPTS_PATH, "all-hosts"), "check-date.sh %s" % (curr_date.decode("UTF-8")), "Testing connectivity with all nodes", merge_path=True, inline=True) != 0:
             do_quit(1)
     except Exception as e:
         print("Failed to check for dates on nodes")
